@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "client.h"
+#include "../shared/client.h"
 
 int main(){
 	const int LOGIN_STR_LENGTH = 80;
