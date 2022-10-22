@@ -12,8 +12,7 @@ int main(int argc, char const* argv[]){
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = { 0 };
-    char* hello = "Hello from server";
-
+    
     //Creating socket file descriptor
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -53,10 +52,11 @@ int main(int argc, char const* argv[]){
     }
 
     valread = read(new_socket, buffer, 1024);
+    printf("Login e senha recebidos: \n");
     printf("%s\n", buffer);
-    send(new_socket, hello, strlen(hello),0);
-    printf("Hello message sent\n");
-
+    char* message = "Login realizado com sucesso!";
+    send(new_socket, message, strlen(message), 0);
+    
     // Closing the connected socket
     close(new_socket);
     // Closing the listening socket

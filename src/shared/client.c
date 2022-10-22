@@ -28,8 +28,6 @@ void log_in(char login[], char password[])
     strcat(login_password, password);
 
     send(sock, login_password, strlen(login_password), 0);
-    printf("Hello message sent\n");
-    valread = read(sock, buffer, 1024);
     printf("%s\n", buffer);
 
     // closing the connected socket
