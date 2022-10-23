@@ -7,43 +7,57 @@
 #include <pthread.h>
 #define PORT 9001
 #define NUM_THREADS 2
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 132
 
-struct read_message_args{
-    int* sock;
-    int* thread_index;
+struct info{
+    int sock;
+    int running_thread_index;
 };
+
 void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
 void thread_control(int* thread_index);
-pthread_t threads[NUM_THREADS] = { };
+int user_exists();
+
+pthread_mutex_t mutex_thread_counter = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_users_file = PTHREAD_MUTEX_INITIALIZER;
+int thread_count = 0, empty_slot = 0;
+pthread_t threads[NUM_THREADS] = {};
 
 void main(int argc, char const* argv[]){
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = { 0 };
-    int thread_index = 0;
 
     init_server(&server_fd, &address, addrlen);
-    pthread_t t_id = pthread_self();
-    printf("Listening Thread: %ld\n", t_id);
 
-    while (1)
+    while (1) // Loop infinito
     {
+        // TODO: precisa criar um array de sockets se não uma thread pode influenciar no socket da outra
         if((new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0)
         {
             perror("accept");
             exit(EXIT_FAILURE);
         }
 
-        struct read_message_args args = { &new_socket, &thread_index };
+        while (thread_count == NUM_THREADS); // Fica preso no loop enquanto não houver threads disponiveis
         
-        while (thread_index == -1); // Fica preso no loop enquanto não houver threads disponiveis
+        pthread_mutex_lock(&mutex_thread_counter);
+        thread_count++;
+        pthread_mutex_unlock(&mutex_thread_counter);
 
-        pthread_create(&threads[thread_index], NULL, read_message, (void*)&args);
+        for (size_t i = 0; i < NUM_THREADS; i++)
+        {
+            if (threads[i] == 0)
+            {
+                empty_slot = i;
+                break;
+            }
+        }
         
-        thread_control(&thread_index);
+        struct info infos = { new_socket, empty_slot };
+        pthread_create(&threads[empty_slot], NULL, read_message, (void*)&infos);
     }
     
     // Closing the listening socket
@@ -52,41 +66,77 @@ void main(int argc, char const* argv[]){
     pthread_exit(NULL);
 }
 
-void* read_message(void* arg){
+void* read_message(void* arg)
+{
     pthread_t t_id = pthread_self();
     printf("Running Thread: %ld\n", t_id);
-    struct read_message_args* args = (struct read_message_args*)arg;
-
-    int* socket = args->sock;
-    int* thread_index = args->thread_index;
+    struct info infos = *(struct info*)arg;
     char buffer[BUFFER_SIZE];
-    read((*socket), buffer, BUFFER_SIZE);
-    printf("Login e senha recebidos: \n");
-    printf("%s\n", buffer);
-    char* message = "Login realizado com sucesso!";
-    send((*socket), message, strlen(message), 0);
+    read(infos.sock, buffer, BUFFER_SIZE);
+    
+    int exists = user_exists(buffer);
+
+    if (exists)
+    {
+        char* message = "Login realizado com sucesso!";
+        send(infos.sock, message, strlen(message), 0);
+    }
+    else
+    {
+        char* message = "Usuário não cadastrado!";
+        send(infos.sock, message, strlen(message), 0);
+    }
     
     // Closing the connected socket
-    close((*socket));
+    close(infos.sock);
 
-    int index = (*thread_index);
-    threads[index] = 0; // livrando espaço no array de threads
+    pthread_mutex_lock(&mutex_thread_counter);
+    thread_count--;
+    threads[infos.running_thread_index] = 0;
+    pthread_mutex_unlock(&mutex_thread_counter);
 }
 
-/* Determina se existe slots livres para se criar threads. Se sim, atribui o index do array de threads com espaço livre.
- Caso não possua espaço livre, valor do index é -1 */
-void thread_control(int* thread_index){
-    
-    for (size_t i = 0; i < NUM_THREADS; i++)
+// Retornos possíves: 0 - Não existe. 1 - Existe
+int user_exists(char buffer[BUFFER_SIZE])
+{
+    char original_buffer[BUFFER_SIZE];
+    memcpy(original_buffer, buffer, BUFFER_SIZE);
+
+    // Critical Session
+    pthread_mutex_lock(&mutex_users_file);
+
+    FILE* file = fopen("users.txt", "r");
+    int found = 0;
+    while (fgets(buffer, BUFFER_SIZE+1, file) != NULL)
     {
-        if (threads[i] == 0) // Não tenho certeza se o ID da thread pode o. Possivel bug
+        if (strcmp(original_buffer, buffer) == 0)
         {
-            *thread_index = i;
+            found = 1;
             break;
         }
-
-        *thread_index = -1;
     }
+    
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_users_file);
+    
+    // End Critical Session
+
+    return found;
+}
+
+void write_user(char* buffer)
+{
+    // Critical Session
+    pthread_mutex_lock(&mutex_users_file);
+
+    FILE* file = fopen("users.txt", "a");
+    fprintf(file, "%s\n", buffer);
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_users_file);
+    
+    // End Critical Session
 }
 
 void init_server(int* server_fd, struct sockaddr_in* address, int addrlen){

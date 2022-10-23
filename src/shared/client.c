@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #define PORT 9001
+#define BUFFER_SIZE 132
 
 int create_socket_connection(int* sock, struct sockaddr_in* sock_addr);
 void fill_with_whitespace(char login[], int array_size);
@@ -13,7 +14,7 @@ void log_in(char login[], char password[])
     int sock = 0, valread, client_fd;
     struct sockaddr_in serv_addr;
     char login_password[130] = {};
-    char buffer[1024] = { 0 };
+    char buffer[BUFFER_SIZE] = { 0 };
     
     bzero((char*)&serv_addr, sizeof(serv_addr));
     client_fd = create_socket_connection(&sock, &serv_addr);
@@ -22,15 +23,15 @@ void log_in(char login[], char password[])
         printf("Error while creating socket");
     }
     
-    fill_with_whitespace(login, 79);
+    fill_with_whitespace(login, 81);
     strcpy(login_password, login);
-    fill_with_whitespace(password, 49);
+    fill_with_whitespace(password, 51);
     strcat(login_password, password);
 
     send(sock, login_password, strlen(login_password), 0);
     printf("%s\n", buffer);
     
-    read(sock, buffer, 1024);
+    read(sock, buffer, BUFFER_SIZE);
     printf("%s", buffer);
     
     // closing the connected socket
@@ -51,6 +52,8 @@ void fill_with_whitespace (char text[], int array_size)
             break;
         }
     }
+
+    text[array_size] = '\0';
 }
 
 int create_socket_connection(int* sock, struct sockaddr_in* serv_addr)
