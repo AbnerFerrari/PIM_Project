@@ -1,4 +1,6 @@
-CFLAGS = ""
+CFLAGS =
+
+all: clean tela server
 
 tela : client.o tela_login.o
 	gcc -o tela.out client.o tela_login.o
@@ -16,4 +18,4 @@ tela_login.o :
 	gcc -c $(CFLAGS) ./src/tela_login/tela_login.c
 
 clean :
-	rm client.o tela_login.o server.o
+	rm client.o tela_login.o server.o server.out tela.out
