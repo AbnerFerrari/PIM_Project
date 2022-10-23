@@ -7,12 +7,12 @@
 #define PORT 9001
 
 int main(int argc, char const* argv[]){
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = { 0 };
-    
+
     //Creating socket file descriptor
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -51,7 +51,7 @@ int main(int argc, char const* argv[]){
         exit(EXIT_FAILURE);
     }
 
-    valread = read(new_socket, buffer, 1024);
+    read(new_socket, buffer, 1024);
     printf("Login e senha recebidos: \n");
     printf("%s\n", buffer);
     char* message = "Login realizado com sucesso!";

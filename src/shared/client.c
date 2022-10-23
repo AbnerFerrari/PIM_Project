@@ -16,8 +16,8 @@ void log_in(char login[], char password[])
     char buffer[1024] = { 0 };
     
     bzero((char*)&serv_addr, sizeof(serv_addr));
-    int conn_created = create_socket_connection(&sock, &serv_addr);
-    if (conn_created < 0)
+    client_fd = create_socket_connection(&sock, &serv_addr);
+    if (client_fd < 0)
     {
         printf("Error while creating socket");
     }
@@ -29,9 +29,12 @@ void log_in(char login[], char password[])
 
     send(sock, login_password, strlen(login_password), 0);
     printf("%s\n", buffer);
-
+    
+    read(sock, buffer, 1024);
+    printf("%s", buffer);
+    
     // closing the connected socket
-    int closed = close(0);
+    int closed = close(client_fd);
 }
 
 void fill_with_whitespace (char text[], int array_size)
@@ -63,10 +66,12 @@ int create_socket_connection(int* sock, struct sockaddr_in* serv_addr)
     serv_addr->sin_port = htons(PORT);
     serv_addr->sin_addr.s_addr = inet_addr("127.0.0.1"); // Endereço IP do servidor
 
-    int status_conn = connect((*sock), (struct sockaddr*)serv_addr, sizeof((*serv_addr)));
-    if(status_conn < 0)
+    client_fd = connect((*sock), (struct sockaddr*)serv_addr, sizeof((*serv_addr)));
+    if(client_fd < 0)
     {
         printf("\nConnection Failed \n");
         return -1;
     }
+
+    return client_fd;
 }
