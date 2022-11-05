@@ -2,8 +2,8 @@ CFLAGS =
 
 all: clean tela server
 
-tela : client.o tela_login.o
-	gcc -o tela.out client.o tela_login.o
+tela : client.o cadastro_funcionario.o menu.o login.o
+	gcc -o tela.out client.o cadastro_funcionario.o menu.o login.o
 
 server : server.o
 	gcc -o server.out server.o
@@ -14,8 +14,14 @@ server.o :
 client.o :
 	gcc -c $(CFLAGS) ./src/shared/client.c
 
-tela_login.o :
-	gcc -c $(CFLAGS) ./src/tela_login/tela_login.c
+menu.o :
+	gcc -c $(CFLAGS) ./src/menu/menu.c
+
+login.o :
+	gcc -c $(CFLAGS) ./src/login/login.c
+
+cadastro_funcionario.o :
+	gcc -c $(CFLAGS) ./src/cadastro_funcionario/cadastro_funcionario.c
 
 clean :
-	rm client.o tela_login.o server.o server.out tela.out
+	rm client.o cadastro_funcionario.o menu.o login.o server.o server.out tela.out

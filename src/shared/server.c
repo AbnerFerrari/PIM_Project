@@ -10,18 +10,22 @@
 #define BUFFER_SIZE 132
 
 struct info{
+    char* action;
+    char* table;
     int sock;
     int running_thread_index;
+    char* buffer_received;
 };
 
 void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
 void thread_control(int* thread_index);
 int user_exists();
+char* database_read(char* table);
 
 pthread_mutex_t mutex_thread_counter = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_users_file = PTHREAD_MUTEX_INITIALIZER;
-int thread_count = 0, empty_slot = 0;
+int thread_count = 0, empty_slot_index = 0;
 pthread_t threads[NUM_THREADS] = {};
 
 void main(int argc, char const* argv[]){
@@ -34,7 +38,6 @@ void main(int argc, char const* argv[]){
 
     while (1) // Loop infinito
     {
-        // TODO: precisa criar um array de sockets se não uma thread pode influenciar no socket da outra
         if((new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0)
         {
             perror("accept");
@@ -51,13 +54,19 @@ void main(int argc, char const* argv[]){
         {
             if (threads[i] == 0)
             {
-                empty_slot = i;
+                empty_slot_index = i;
                 break;
             }
         }
         
-        struct info infos = { new_socket, empty_slot };
-        pthread_create(&threads[empty_slot], NULL, read_message, (void*)&infos);
+        
+        
+        bzero(buffer, BUFFER_SIZE);
+        read(new_socket, buffer, BUFFER_SIZE);
+
+        struct info infos = { NULL, NULL, new_socket, empty_slot_index, buffer };
+        
+        pthread_create(&threads[empty_slot_index], NULL, read_message, (void*)&infos);
     }
     
     // Closing the listening socket
@@ -66,27 +75,106 @@ void main(int argc, char const* argv[]){
     pthread_exit(NULL);
 }
 
+char* database_read(char* table){
+
+    char* file_extension = ".txt";
+    int length = strlen(table) + strlen(file_extension);
+
+    char file_name[length];
+
+    bzero(file_name, length);
+
+    strcat(file_name, table);
+    strcat(file_name, file_extension);
+
+    // Critical Session
+    pthread_mutex_lock(&mutex_users_file);
+
+    FILE* file = fopen(file_name, "r");
+    
+    fseek(file, 0, SEEK_END); 
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET); 
+
+    char* buffer = NULL;
+
+    buffer = malloc(size);
+    fread(buffer, 1, size, file);
+    
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_users_file);
+    // End Critical Session
+
+    return buffer;
+}
+
+
 void* read_message(void* arg)
 {
     pthread_t t_id = pthread_self();
     printf("Running Thread: %ld\n", t_id);
+    
     struct info infos = *(struct info*)arg;
-    char buffer[BUFFER_SIZE];
-    read(infos.sock, buffer, BUFFER_SIZE);
-    
-    int exists = user_exists(buffer);
 
-    if (exists)
+    int length = strlen(infos.buffer_received);
+
+    char* buffer = malloc(length);
+
+    memcpy(buffer, infos.buffer_received, strlen(infos.buffer_received));
+
+    infos.action = strtok(buffer, " ");
+    infos.table = strtok(NULL, " ");
+
+    if (strncmp(infos.action, "LIST", 4) == 0)
     {
-        char* message = "Login realizado com sucesso!";
-        send(infos.sock, message, strlen(message), 0);
+        char* table = database_read(infos.table);
+        int length = strlen(table);
+        send(infos.sock, table, length, 0);
+        // lê a tabela que a ação deve ser executada
+        // lê o arquivo inteiro
     }
-    else
+    else if (infos.action == "GET")
     {
-        char* message = "Usuário não cadastrado!";
-        send(infos.sock, message, strlen(message), 0);
+        // lê a tabela que a ação deve ser executada
+        // lê o campo a ser filtrado e o valor do filtro
     }
-    
+    else if (infos.action == "POST")
+    {
+        // lê a tabela que a ação deve ser executada
+        // escaneia o objeto
+        // salva o objeto
+    }
+    else if (infos.action == "UPDATE")
+    {
+        // lê a tabela que a ação deve ser executada
+        // escaneia o objeto do buffer
+        // recupera o objeto
+        // atribui o novo objeto ao antigo
+        // salvar o objeto
+    }
+    else if (infos.action == "DELETE"){
+        // lê a tabela que a ação deve ser executada
+        // escaneia o objeto do buffer
+        // recupera o objeto da base de dados
+        // se existir, exclui
+    }
+    else // rotina de login. Isolar esse código
+    {
+        int exists = user_exists(infos.buffer_received);
+        
+        if (exists)
+        {
+            char message = '1';
+            send(infos.sock, &message, sizeof(message), 0);
+        }
+        else
+        {
+            char message = '0';
+            send(infos.sock, &message, sizeof(message), 0);
+        }
+    }
+
     // Closing the connected socket
     close(infos.sock);
 
@@ -105,8 +193,9 @@ int user_exists(char buffer[BUFFER_SIZE])
     // Critical Session
     pthread_mutex_lock(&mutex_users_file);
 
-    FILE* file = fopen("users.txt", "r");
+    FILE* file = fopen("funcionarios.txt", "r");
     int found = 0;
+
     while (fgets(buffer, BUFFER_SIZE+1, file) != NULL)
     {
         if (strcmp(original_buffer, buffer) == 0)
@@ -164,7 +253,7 @@ void init_server(int* server_fd, struct sockaddr_in* address, int addrlen){
     address->sin_port = htons(PORT);
 
     // Forcefully attaching socket to the port 8080
-    if(bind(*server_fd, (struct sockaddr*)*&address, addrlen) < 0)
+    if(bind(*server_fd, (struct sockaddr*)address, addrlen) < 0)
     {
         perror("bind failed");
         exit(EXIT_FAILURE);
