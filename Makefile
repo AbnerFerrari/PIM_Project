@@ -1,9 +1,9 @@
 CFLAGS =
 
-all: clean tela server
+all: clean_all client server
 
-tela : client.o cadastro_funcionario.o menu.o login.o
-	gcc -o tela.out client.o cadastro_funcionario.o menu.o login.o
+client : client.o cadastro_funcionario.o menu.o login.o
+	gcc -o client.out client.o cadastro_funcionario.o menu.o login.o
 
 server : server.o
 	gcc -o server.out server.o
@@ -23,5 +23,11 @@ login.o :
 cadastro_funcionario.o :
 	gcc -c $(CFLAGS) ./src/cadastro_funcionario/cadastro_funcionario.c
 
-clean :
-	rm client.o cadastro_funcionario.o menu.o login.o server.o server.out tela.out
+clean_all :
+	rm client.o cadastro_funcionario.o menu.o login.o server.o server.out client.out
+
+clean_server :
+	rm server.o server.out
+
+clean_client :
+	rm client.o cadastro_funcionario.o menu.o login.o client.out

@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "../types/funcionario.h"
+
 #define PORT 9001
 #define NUM_THREADS 2
 #define BUFFER_SIZE 132
@@ -33,6 +35,7 @@ void main(int argc, char const* argv[]){
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = { 0 };
+    struct info infos = {};
 
     init_server(&server_fd, &address, addrlen);
 
@@ -64,7 +67,12 @@ void main(int argc, char const* argv[]){
         bzero(buffer, BUFFER_SIZE);
         read(new_socket, buffer, BUFFER_SIZE);
 
-        struct info infos = { NULL, NULL, new_socket, empty_slot_index, buffer };
+        bzero(&infos, sizeof(infos));
+        infos.action = NULL; 
+        infos.table = NULL; 
+        infos.sock = new_socket;
+        infos.running_thread_index = empty_slot_index;
+        infos.buffer_received = buffer;
         
         pthread_create(&threads[empty_slot_index], NULL, read_message, (void*)&infos);
     }
@@ -187,24 +195,27 @@ void* read_message(void* arg)
 // Retornos possíves: 0 - Não existe. 1 - Existe
 int user_exists(char buffer[BUFFER_SIZE])
 {
-    char original_buffer[BUFFER_SIZE];
-    memcpy(original_buffer, buffer, BUFFER_SIZE);
-
     // Critical Session
     pthread_mutex_lock(&mutex_users_file);
 
     FILE* file = fopen("funcionarios.txt", "r");
     int found = 0;
 
-    while (fgets(buffer, BUFFER_SIZE+1, file) != NULL)
+    Funcionario func = {};
+    
+    char serialized_func[sizeof(Funcionario)];
+    fseek(file, 0, SEEK_SET);
+    
+    while (fread(&func, sizeof(Funcionario), 1, file))
     {
-        if (strcmp(original_buffer, buffer) == 0)
+        sprintf(serialized_func, FUNCIONARIO_SERIALIZE_FORMAT, func.nome, func.cpf, func.senha);
+        if (strcmp(serialized_func, buffer) == 0)
         {
             found = 1;
             break;
-        }
+        }        
     }
-    
+
     fclose(file);
 
     pthread_mutex_unlock(&mutex_users_file);

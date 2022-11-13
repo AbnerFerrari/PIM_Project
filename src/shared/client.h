@@ -1,5 +1,5 @@
 // Retorno: 0 - Não-Autenticado. 1 - Autenticado
-int log_in(char login[], char password[]);
+//int log_in(Funcionario funcionario);
 
 //Retorno: int->file descriptor do socket criado
 int create_sock_connection();
