@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "../shared/client.h"
 #include "../cadastro_funcionario/cadastro_funcionario.h"
 
 void menu(){
@@ -7,7 +8,7 @@ void menu(){
     
     do
     {
-        system("clear");
+        clear_screen();
         
         printf("1 - Cadastro de Funcionário\n2 - Sair\nEscolha uma opção: ");
         scanf("%d", &option);

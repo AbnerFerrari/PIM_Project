@@ -1,3 +1,5 @@
+#define clear_screen() printf("\033[H\033[J")
+
 // Retorno: 0 - Não-Autenticado. 1 - Autenticado
 //int log_in(Funcionario funcionario);
 

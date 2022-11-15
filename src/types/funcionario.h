@@ -4,4 +4,5 @@ typedef struct _Funcionario{
     char senha[21];
 } Funcionario;
 
-#define FUNCIONARIO_SERIALIZE_FORMAT "%-51s%-12s%-21s"
+#define FUNCIONARIO_FORMAT_IN "%-51s%-12s%-21s"
+#define FUNCIONARIO_FORMAT_OUT "Nome: %s\nCPF: %s\nSenha: %s\n"

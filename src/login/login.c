@@ -17,25 +17,28 @@ int log_in(Funcionario* funcionario);
 
 int main(){
 	Funcionario funcionario = {};
-	system("clear");
+    int authenticated = 0 ;
+    
+    while(authenticated == 0){
+        clear_screen();
 	
-    printf("Nome (%d caracteres): ", LOGIN_STR_LENGTH);
-	scanf("%s[^\n]", funcionario.nome);
+        printf("Nome (%d caracteres): ", LOGIN_STR_LENGTH);
+        scanf("%s[^\n]", funcionario.nome);
 
-	printf("Login (%d caracteres): ", LOGIN_STR_LENGTH);
-	scanf("%s", funcionario.cpf);
+        printf("Login (%d caracteres): ", LOGIN_STR_LENGTH);
+        scanf("%s", funcionario.cpf);
+        
+        printf("Senha (%d caracteres): ", PASSWORD_STR_LENGTH);
+        scanf("%s", funcionario.senha);
+
+	    authenticated = log_in(&funcionario);
+
+        if (authenticated)
+            menu();
+    }
+
+    return 0;
 	
-	printf("Senha (%d caracteres): ", PASSWORD_STR_LENGTH);
-	scanf("%s", funcionario.senha);
-
-	int authenticated = log_in(&funcionario);
-
-	if (authenticated)
-		menu();
-	else	
-		printf("Usuário não cadastrado\n");
-		
-	return 0;
 }
 
 // Retorno: 0 - Não-Autenticado. 1 - Autenticado
@@ -43,7 +46,7 @@ int log_in(Funcionario* funcionario)
 {
     int sock = create_sock_connection();
     char* serialized_funcionario;
-    sprintf(serialized_funcionario, FUNCIONARIO_SERIALIZE_FORMAT, funcionario->nome, funcionario->cpf, funcionario->senha);
+    sprintf(serialized_funcionario, FUNCIONARIO_FORMAT_IN, funcionario->nome, funcionario->cpf, funcionario->senha);
     send_message(sock, serialized_funcionario);
 
     char buffer = '\0';

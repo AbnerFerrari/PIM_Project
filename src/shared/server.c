@@ -7,6 +7,8 @@
 #include <pthread.h>
 #include "../types/funcionario.h"
 
+#define FILE_EXTENSION_SIZE 4
+#define FILE_EXTENSION ".txt"
 #define PORT 9001
 #define NUM_THREADS 2
 #define BUFFER_SIZE 132
@@ -23,7 +25,8 @@ void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
 void thread_control(int* thread_index);
 int user_exists();
-char* database_read(char* table);
+void database_read(char* table, char* buffer, long buffer_size, int chunk_size, int metadata_size);
+long get_file_size(char* file_name);
 
 pthread_mutex_t mutex_thread_counter = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_users_file = PTHREAD_MUTEX_INITIALIZER;
@@ -83,17 +86,17 @@ void main(int argc, char const* argv[]){
     pthread_exit(NULL);
 }
 
-char* database_read(char* table){
+void get_file_name_with_extension(char* table_name, int table_name_length, char* buffer) {
+    bzero(buffer, FILE_EXTENSION_SIZE);
 
-    char* file_extension = ".txt";
-    int length = strlen(table) + strlen(file_extension);
+    strcat(buffer, table_name);
+    strcat(buffer, FILE_EXTENSION);
+}
 
+void database_read(char* table, char* buffer, long buffer_size, int chunk_size, int metadata_size){
+    int length = strlen(table) + strlen(FILE_EXTENSION);
     char file_name[length];
-
-    bzero(file_name, length);
-
-    strcat(file_name, table);
-    strcat(file_name, file_extension);
+    get_file_name_with_extension(table, length, file_name);
 
     // Critical Session
     pthread_mutex_lock(&mutex_users_file);
@@ -104,17 +107,20 @@ char* database_read(char* table){
     long size = ftell(file);
     fseek(file, 0, SEEK_SET); 
 
-    char* buffer = NULL;
-
-    buffer = malloc(size);
-    fread(buffer, 1, size, file);
+    // buffer = malloc(size);
+    Funcionario func = {};
+    //fread(buffer, buffer_size, 1, file);
+    int times = buffer_size / chunk_size;
+    while(fread(&func, chunk_size, 1, file) != 0){
+        char local_buffer[chunk_size + metadata_size];
+        sprintf(local_buffer, FUNCIONARIO_FORMAT_OUT, func.nome, func.cpf, func.senha);
+        strcat(buffer, local_buffer);
+    }
     
     fclose(file);
 
     pthread_mutex_unlock(&mutex_users_file);
     // End Critical Session
-
-    return buffer;
 }
 
 
@@ -136,9 +142,16 @@ void* read_message(void* arg)
 
     if (strncmp(infos.action, "LIST", 4) == 0)
     {
-        char* table = database_read(infos.table);
-        int length = strlen(table);
-        send(infos.sock, table, length, 0);
+        // pega o tamanho do arquivo e guarda na variavel
+        // constroi o char array no tamanho do arquivo
+        // passa o char array por referencia
+        // função preenche o char array
+        long file_size = get_file_size(infos.table);
+        long size_with_format = (file_size / sizeof(Funcionario)) * 19 + file_size;
+        char list_buffer[size_with_format];
+        database_read(infos.table, list_buffer, file_size, sizeof(Funcionario), 19);
+        
+        send(infos.sock, list_buffer, file_size, 0);
         // lê a tabela que a ação deve ser executada
         // lê o arquivo inteiro
     }
@@ -192,6 +205,25 @@ void* read_message(void* arg)
     pthread_mutex_unlock(&mutex_thread_counter);
 }
 
+long get_file_size(char* file_name)
+{ 
+    pthread_mutex_lock(&mutex_users_file);
+    int length = strlen(file_name) + FILE_EXTENSION_SIZE;
+    char file_name_with_extension[length];
+    get_file_name_with_extension(file_name, length, file_name_with_extension);
+    
+    FILE* file = fopen(file_name_with_extension, "r");
+    
+    fseek(file, 0, SEEK_END); 
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET); 
+
+    fclose(file);
+    pthread_mutex_unlock(&mutex_users_file);
+
+    return size;
+}
+
 // Retornos possíves: 0 - Não existe. 1 - Existe
 int user_exists(char buffer[BUFFER_SIZE])
 {
@@ -208,7 +240,7 @@ int user_exists(char buffer[BUFFER_SIZE])
     
     while (fread(&func, sizeof(Funcionario), 1, file))
     {
-        sprintf(serialized_func, FUNCIONARIO_SERIALIZE_FORMAT, func.nome, func.cpf, func.senha);
+        sprintf(serialized_func, FUNCIONARIO_FORMAT_IN, func.nome, func.cpf, func.senha);
         if (strcmp(serialized_func, buffer) == 0)
         {
             found = 1;

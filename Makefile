@@ -24,10 +24,10 @@ cadastro_funcionario.o :
 	gcc -c $(CFLAGS) ./src/cadastro_funcionario/cadastro_funcionario.c
 
 clean_all :
-	rm client.o cadastro_funcionario.o menu.o login.o server.o server.out client.out
+	rm -f client.o cadastro_funcionario.o menu.o login.o server.o server.out client.out
 
 clean_server :
-	rm server.o server.out
+	rm -f server.o server.out
 
 clean_client :
-	rm client.o cadastro_funcionario.o menu.o login.o client.out
+	rm -f client.o cadastro_funcionario.o menu.o login.o client.out
