@@ -142,14 +142,27 @@ void* read_message(void* arg)
 
     if (strncmp(infos.action, "LIST", 4) == 0)
     {
-        // pega o tamanho do arquivo e guarda na variavel
-        // constroi o char array no tamanho do arquivo
-        // passa o char array por referencia
-        // função preenche o char array
+        
         long file_size = get_file_size(infos.table);
-        long size_with_format = (file_size / sizeof(Funcionario)) * 19 + file_size;
+        
+        long size_with_format;
+        int chunk_size;
+        int quantity_metadata_chars;
+        
+        if (strcmp(infos.table, "funcionarios") == 0)
+        {
+            size_with_format = (file_size / sizeof(Funcionario)) * 21 + file_size;
+            chunk_size = sizeof(Funcionario);
+            quantity_metadata_chars = 21;
+        }
+        else
+        {
+            perror("nome da tabela é invalido");
+        }
+        
+        
         char list_buffer[size_with_format];
-        database_read(infos.table, list_buffer, file_size, sizeof(Funcionario), 19);
+        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars);
         
         send(infos.sock, list_buffer, file_size, 0);
         // lê a tabela que a ação deve ser executada
