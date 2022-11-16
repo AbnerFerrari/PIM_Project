@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include "./constants.h"
+#include "../headers/constants.h"
 
 long get_file_size(char* file_name, pthread_mutex_t* mutex)
 { 

@@ -5,11 +5,17 @@ all: clean_all client server
 client : client.o cadastro_funcionario.o menu.o login.o
 	gcc -o client.out client.o cadastro_funcionario.o menu.o login.o
 
-server : server.o
-	gcc -o server.out server.o
+server : server.o data_access.o utils.o
+	gcc -o server.out server.o data_access.o utils.o
 
 server.o :
 	gcc -c $(CFLAGS) ./src/server/server.c
+
+data_access.o :
+	gcc -c $(CFLAGS) ./src/server/data_access/data_access.c
+
+utils.o :
+	gcc -c $(CFLAGS) ./src/server/utils/utils.c	
 
 client.o :
 	gcc -c $(CFLAGS) ./src/client/server_access/client.c
