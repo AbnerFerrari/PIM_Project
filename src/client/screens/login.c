@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../shared/client.h"
+#include "../headers/client.h"
 #include <string.h>
-#include "../menu/menu.h"
+#include "../headers/menu.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "../types/funcionario.h"
+#include "../../types/funcionario.h"
 
 #define BUFFER_SIZE 132
 #define LOGIN_STR_LENGTH 80

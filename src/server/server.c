@@ -6,12 +6,9 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "../types/funcionario.h"
-
-#define FILE_EXTENSION_SIZE 4
-#define FILE_EXTENSION ".txt"
-#define PORT 9001
-#define NUM_THREADS 2
-#define BUFFER_SIZE 132
+#include "./headers/data_access.h"
+#include "./headers/utils.h"
+#include "./headers/constants.h"
 
 struct info{
     char* action;
@@ -23,10 +20,6 @@ struct info{
 
 void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
-void thread_control(int* thread_index);
-int user_exists();
-void database_read(char* table, char* buffer, long buffer_size, int chunk_size, int metadata_size);
-long get_file_size(char* file_name);
 
 pthread_mutex_t mutex_thread_counter = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_users_file = PTHREAD_MUTEX_INITIALIZER;
@@ -86,44 +79,6 @@ void main(int argc, char const* argv[]){
     pthread_exit(NULL);
 }
 
-void get_file_name_with_extension(char* table_name, int table_name_length, char* buffer) {
-    bzero(buffer, FILE_EXTENSION_SIZE);
-
-    strcat(buffer, table_name);
-    strcat(buffer, FILE_EXTENSION);
-}
-
-void database_read(char* table, char* buffer, long buffer_size, int chunk_size, int metadata_size){
-    int length = strlen(table) + strlen(FILE_EXTENSION);
-    char file_name[length];
-    get_file_name_with_extension(table, length, file_name);
-
-    // Critical Session
-    pthread_mutex_lock(&mutex_users_file);
-
-    FILE* file = fopen(file_name, "r");
-    
-    fseek(file, 0, SEEK_END); 
-    long size = ftell(file);
-    fseek(file, 0, SEEK_SET); 
-
-    // buffer = malloc(size);
-    Funcionario func = {};
-    //fread(buffer, buffer_size, 1, file);
-    int times = buffer_size / chunk_size;
-    while(fread(&func, chunk_size, 1, file) != 0){
-        char local_buffer[chunk_size + metadata_size];
-        sprintf(local_buffer, FUNCIONARIO_FORMAT_OUT, func.nome, func.cpf, func.senha);
-        strcat(buffer, local_buffer);
-    }
-    
-    fclose(file);
-
-    pthread_mutex_unlock(&mutex_users_file);
-    // End Critical Session
-}
-
-
 void* read_message(void* arg)
 {
     pthread_t t_id = pthread_self();
@@ -143,7 +98,7 @@ void* read_message(void* arg)
     if (strncmp(infos.action, "LIST", 4) == 0)
     {
         
-        long file_size = get_file_size(infos.table);
+        long file_size = get_file_size(infos.table, &mutex_users_file);
         
         long size_with_format;
         int chunk_size;
@@ -162,7 +117,7 @@ void* read_message(void* arg)
         
         
         char list_buffer[size_with_format];
-        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars);
+        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars, &mutex_users_file);
         
         send(infos.sock, list_buffer, file_size, 0);
         // lê a tabela que a ação deve ser executada
@@ -195,7 +150,7 @@ void* read_message(void* arg)
     }
     else // rotina de login. Isolar esse código
     {
-        int exists = user_exists(infos.buffer_received);
+        int exists = user_exists(infos.buffer_received, &mutex_users_file);
         
         if (exists)
         {
@@ -216,72 +171,6 @@ void* read_message(void* arg)
     thread_count--;
     threads[infos.running_thread_index] = 0;
     pthread_mutex_unlock(&mutex_thread_counter);
-}
-
-long get_file_size(char* file_name)
-{ 
-    pthread_mutex_lock(&mutex_users_file);
-    int length = strlen(file_name) + FILE_EXTENSION_SIZE;
-    char file_name_with_extension[length];
-    get_file_name_with_extension(file_name, length, file_name_with_extension);
-    
-    FILE* file = fopen(file_name_with_extension, "r");
-    
-    fseek(file, 0, SEEK_END); 
-    long size = ftell(file);
-    fseek(file, 0, SEEK_SET); 
-
-    fclose(file);
-    pthread_mutex_unlock(&mutex_users_file);
-
-    return size;
-}
-
-// Retornos possíves: 0 - Não existe. 1 - Existe
-int user_exists(char buffer[BUFFER_SIZE])
-{
-    // Critical Session
-    pthread_mutex_lock(&mutex_users_file);
-
-    FILE* file = fopen("funcionarios.txt", "r");
-    int found = 0;
-
-    Funcionario func = {};
-    
-    char serialized_func[sizeof(Funcionario)];
-    fseek(file, 0, SEEK_SET);
-    
-    while (fread(&func, sizeof(Funcionario), 1, file))
-    {
-        sprintf(serialized_func, FUNCIONARIO_FORMAT_IN, func.nome, func.cpf, func.senha);
-        if (strcmp(serialized_func, buffer) == 0)
-        {
-            found = 1;
-            break;
-        }        
-    }
-
-    fclose(file);
-
-    pthread_mutex_unlock(&mutex_users_file);
-    
-    // End Critical Session
-
-    return found;
-}
-
-void write_user(char* buffer)
-{
-    // Critical Session
-    pthread_mutex_lock(&mutex_users_file);
-
-    FILE* file = fopen("users.txt", "a");
-    fprintf(file, "%s\n", buffer);
-    fclose(file);
-
-    pthread_mutex_unlock(&mutex_users_file);
-    
-    // End Critical Session
 }
 
 void init_server(int* server_fd, struct sockaddr_in* address, int addrlen){

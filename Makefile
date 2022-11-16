@@ -9,19 +9,19 @@ server : server.o
 	gcc -o server.out server.o
 
 server.o :
-	gcc -c $(CFLAGS) ./src/shared/server.c
+	gcc -c $(CFLAGS) ./src/server/server.c
 
 client.o :
-	gcc -c $(CFLAGS) ./src/shared/client.c
+	gcc -c $(CFLAGS) ./src/client/server_access/client.c
 
 menu.o :
-	gcc -c $(CFLAGS) ./src/menu/menu.c
+	gcc -c $(CFLAGS) ./src/client/screens/menu.c
 
 login.o :
-	gcc -c $(CFLAGS) ./src/login/login.c
+	gcc -c $(CFLAGS) ./src/client/screens/login.c
 
 cadastro_funcionario.o :
-	gcc -c $(CFLAGS) ./src/cadastro_funcionario/cadastro_funcionario.c
+	gcc -c $(CFLAGS) ./src/client/screens/cadastro_funcionario.c
 
 clean_all :
 	rm -f client.o cadastro_funcionario.o menu.o login.o server.o server.out client.out

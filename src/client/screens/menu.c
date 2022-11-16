@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../shared/client.h"
-#include "../cadastro_funcionario/cadastro_funcionario.h"
+#include "../headers/client.h"
+#include "../headers/cadastro_funcionario.h"
 
 void menu(){
     int option;
