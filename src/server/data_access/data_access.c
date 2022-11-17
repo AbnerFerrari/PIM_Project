@@ -1,7 +1,9 @@
 #include "../headers/constants.h"
 #include "../../types/funcionario.h"
+#include "../headers/utils.h"
 #include <pthread.h>
 #include <stdio.h>
+#include <string.h>
 
 void database_read(char* table, char* buffer, long buffer_size, int chunk_size, int metadata_size, pthread_mutex_t* mutex){
     int length = strlen(table) + strlen(FILE_EXTENSION);
@@ -33,7 +35,7 @@ void database_read(char* table, char* buffer, long buffer_size, int chunk_size, 
     // End Critical Session
 }
 
-int user_exists(char buffer, pthread_mutex_t* mutex)
+int user_exists(char* buffer, pthread_mutex_t* mutex)
 {
     // Critical Session
     pthread_mutex_lock(mutex);

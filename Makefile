@@ -33,7 +33,7 @@ clean_all :
 	rm -f client.o cadastro_funcionario.o menu.o login.o server.o server.out client.out
 
 clean_server :
-	rm -f server.o server.out
+	rm -f server.o server.out data_access.o utils.o
 
 clean_client :
 	rm -f client.o cadastro_funcionario.o menu.o login.o client.out

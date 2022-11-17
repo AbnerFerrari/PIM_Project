@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include "../headers/constants.h"
 
+void get_file_name_with_extension(char* table_name, int table_name_length, char* buffer);
+
 long get_file_size(char* file_name, pthread_mutex_t* mutex)
 { 
     pthread_mutex_lock(mutex);

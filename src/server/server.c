@@ -22,7 +22,7 @@ void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
 
 pthread_mutex_t mutex_thread_counter = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_users_file = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_funcionarios_file = PTHREAD_MUTEX_INITIALIZER;
 int thread_count = 0, empty_slot_index = 0;
 pthread_t threads[NUM_THREADS] = {};
 
@@ -98,7 +98,7 @@ void* read_message(void* arg)
     if (strncmp(infos.action, "LIST", 4) == 0)
     {
         
-        long file_size = get_file_size(infos.table, &mutex_users_file);
+        long file_size = get_file_size(infos.table, &mutex_funcionarios_file);
         
         long size_with_format;
         int chunk_size;
@@ -117,7 +117,7 @@ void* read_message(void* arg)
         
         
         char list_buffer[size_with_format];
-        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars, &mutex_users_file);
+        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars, &mutex_funcionarios_file);
         
         send(infos.sock, list_buffer, file_size, 0);
         // lê a tabela que a ação deve ser executada
@@ -150,7 +150,7 @@ void* read_message(void* arg)
     }
     else // rotina de login. Isolar esse código
     {
-        int exists = user_exists(infos.buffer_received, &mutex_users_file);
+        int exists = user_exists(infos.buffer_received, &mutex_funcionarios_file);
         
         if (exists)
         {
