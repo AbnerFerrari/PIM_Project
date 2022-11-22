@@ -9,14 +9,7 @@
 #include "./headers/data_access.h"
 #include "./headers/utils.h"
 #include "./headers/constants.h"
-
-struct info{
-    char* action;
-    char* table;
-    int sock;
-    int running_thread_index;
-    char* buffer_received;
-};
+#include "../types/request.h"
 
 void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
@@ -30,8 +23,8 @@ void main(int argc, char const* argv[]){
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    char buffer[BUFFER_SIZE] = { 0 };
-    struct info infos = {};
+    char buffer[sizeof(Request)] = { 0 };
+    Request infos = {};
 
     init_server(&server_fd, &address, addrlen);
 
@@ -59,17 +52,19 @@ void main(int argc, char const* argv[]){
         }
         
         
-        
-        bzero(buffer, BUFFER_SIZE);
-        read(new_socket, buffer, BUFFER_SIZE);
-
+        bzero(buffer, sizeof(Request));
         bzero(&infos, sizeof(infos));
-        infos.action = NULL; 
-        infos.table = NULL; 
+        read(new_socket, buffer, 240);
+        
+        strncpy(infos.action, buffer, 6);
+        strncpy(infos.table, buffer + 7, 21);
+        
+        strncpy(infos.body, buffer + 28, 201);
+
+        //memcpy(infos.full_request, buffer, 240);
         infos.sock = new_socket;
         infos.running_thread_index = empty_slot_index;
-        infos.buffer_received = buffer;
-        
+
         pthread_create(&threads[empty_slot_index], NULL, read_message, (void*)&infos);
     }
     
@@ -84,16 +79,7 @@ void* read_message(void* arg)
     pthread_t t_id = pthread_self();
     printf("Running Thread: %ld\n", t_id);
     
-    struct info infos = *(struct info*)arg;
-
-    int length = strlen(infos.buffer_received);
-
-    char* buffer = malloc(length);
-
-    memcpy(buffer, infos.buffer_received, strlen(infos.buffer_received));
-
-    infos.action = strtok(buffer, " ");
-    infos.table = strtok(NULL, " ");
+    struct request infos = *(struct request*)arg;
 
     if (strncmp(infos.action, "LIST", 4) == 0)
     {
@@ -128,13 +114,11 @@ void* read_message(void* arg)
         // lê a tabela que a ação deve ser executada
         // lê o campo a ser filtrado e o valor do filtro
     }
-    else if (infos.action == "POST")
+    else if (strncmp(infos.action, "POST", 4) == 0)
     {
-        // lê a tabela que a ação deve ser executada
-        // escaneia o objeto
-        // salva o objeto
+        database_write(strtok(infos.table, " "), infos.body, &mutex_funcionarios_file);
     }
-    else if (infos.action == "UPDATE")
+    else if (infos.action== "UPDATE")
     {
         // lê a tabela que a ação deve ser executada
         // escaneia o objeto do buffer
@@ -150,7 +134,7 @@ void* read_message(void* arg)
     }
     else // rotina de login. Isolar esse código
     {
-        int exists = user_exists(infos.buffer_received, &mutex_funcionarios_file);
+        int exists = user_exists(infos.body, &mutex_funcionarios_file);
         
         if (exists)
         {

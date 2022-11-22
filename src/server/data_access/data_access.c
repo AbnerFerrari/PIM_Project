@@ -25,13 +25,40 @@ void database_read(char* table, char* buffer, long buffer_size, int chunk_size, 
     int times = buffer_size / chunk_size;
     while(fread(&func, chunk_size, 1, file) != 0){
         char local_buffer[chunk_size + metadata_size];
-        sprintf(local_buffer, FUNCIONARIO_FORMAT_OUT, func.nome, func.cpf, func.senha);
+        sprintf(local_buffer, FUNCIONARIO_PRETTY_FORMAT, func.nome, func.cpf, func.senha);
         strcat(buffer, local_buffer);
     }
     
     fclose(file);
 
     pthread_mutex_unlock(mutex);
+    // End Critical Session
+}
+
+int database_write(char* table_name, char* buffer, pthread_mutex_t* mutex)
+{
+    printf("%s", buffer);
+    int length = strlen(table_name) + strlen(FILE_EXTENSION);
+    char file_name[length];
+    get_file_name_with_extension(table_name, length, file_name);
+
+    // Critical Session
+    pthread_mutex_lock(mutex);
+
+    FILE* file = fopen(file_name, "a");
+    Funcionario func = {};
+    
+    sscanf(buffer, FUNCIONARIO_FORMAT_OUT, func.nome, func.cpf, func.senha);
+    
+    // func.nome[FUNCIONARIO_NAME_SIZE - 1] = '\0';
+    // func.cpf[FUNCIONARIO_CPF_SIZE - 1] = '\0';
+    // func.senha[FUNCIONARIO_PASSWORD_SIZE - 1] = '\0';
+
+    fprintf(file, FUNCIONARIO_FORMAT_IN, func.nome, func.cpf, func.senha);
+    fclose(file);
+
+    pthread_mutex_unlock(mutex);
+    
     // End Critical Session
 }
 
@@ -51,7 +78,7 @@ int user_exists(char* buffer, pthread_mutex_t* mutex)
     while (fread(&func, sizeof(Funcionario), 1, file))
     {
         sprintf(serialized_func, FUNCIONARIO_FORMAT_IN, func.nome, func.cpf, func.senha);
-        if (strcmp(serialized_func, buffer) == 0)
+        if (strncmp(serialized_func, buffer, 84) == 0)
         {
             found = 1;
             break;
@@ -65,18 +92,4 @@ int user_exists(char* buffer, pthread_mutex_t* mutex)
     // End Critical Session
 
     return found;
-}
-
-void write_user(char* buffer, pthread_mutex_t* mutex)
-{
-    // Critical Session
-    pthread_mutex_lock(mutex);
-
-    FILE* file = fopen("users.txt", "a");
-    fprintf(file, "%s\n", buffer);
-    fclose(file);
-
-    pthread_mutex_unlock(mutex);
-    
-    // End Critical Session
 }

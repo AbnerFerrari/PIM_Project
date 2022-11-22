@@ -31,14 +31,23 @@ void cadastro_funcionario(int sock){
             case 2:
                 Funcionario func = {};
 
-                printf("Nome: ");
-                scanf("%s", func.nome);
-
-                printf("CPF: ");
-                scanf("%s", func.cpf);
-
-                printf("Senha: ");
-                scanf("%s", func.senha);
+                printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
+                char name[FUNCIONARIO_NAME_SIZE];
+                bzero(name, FUNCIONARIO_NAME_SIZE);
+                scanf("%[^\n]", name);
+                sprintf(func.nome, FUNCIONARIO_NAME_FORMAT_IN, name);
+                
+                printf("CPF (%d caracteres): ", FUNCIONARIO_CPF_SIZE - 1);
+                char cpf[FUNCIONARIO_CPF_SIZE];
+                bzero(cpf, FUNCIONARIO_CPF_SIZE);
+                scanf("%s", cpf);
+                sprintf(func.cpf, FUNCIONARIO_CPF_FORMAT_IN, cpf);
+                
+                printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
+                char password[FUNCIONARIO_PASSWORD_SIZE];
+                bzero(password, FUNCIONARIO_PASSWORD_SIZE);
+                scanf("%s", password);
+                sprintf(func.senha, FUNCIONARIO_PASSWORD_FORMAT_IN, password);
 
                 save("funcionarios", &func);
 

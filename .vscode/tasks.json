@@ -5,7 +5,7 @@
             "label": "Build Client",
             "command": "make",
             "args": [
-                "--directory=/home/abnerferrari/PIM_Project/Sistema",
+                "--directory=${workspaceFolder}",
                 "clean_client",
                 "client",
                 "CFLAGS=\"-g\""
@@ -27,7 +27,7 @@
             "label": "Build Server",
             "command": "make",
             "args": [
-                "--directory=/home/abnerferrari/PIM_Project/Sistema",
+                "--directory=${workspaceFolder}",
                 "clean_server",
                 "server",
                 "CFLAGS=\"-g\""

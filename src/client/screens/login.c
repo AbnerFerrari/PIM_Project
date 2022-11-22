@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "../../types/funcionario.h"
+#include "../../types/request.h"
 
 #define BUFFER_SIZE 132
 #define LOGIN_STR_LENGTH 80
@@ -22,14 +23,23 @@ int main(){
     while(authenticated == 0){
         clear_screen();
 	
-        printf("Nome (%d caracteres): ", LOGIN_STR_LENGTH);
-        scanf("%s[^\n]", funcionario.nome);
-
-        printf("Login (%d caracteres): ", LOGIN_STR_LENGTH);
-        scanf("%s", funcionario.cpf);
+        printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
+        char name[FUNCIONARIO_NAME_SIZE];
+        bzero(name, FUNCIONARIO_NAME_SIZE);
+        scanf("%[^\n]%*c", name);
+        sprintf(funcionario.nome, FUNCIONARIO_NAME_FORMAT_IN, name);
         
-        printf("Senha (%d caracteres): ", PASSWORD_STR_LENGTH);
-        scanf("%s", funcionario.senha);
+        printf("CPF (%d caracteres): ", FUNCIONARIO_CPF_SIZE - 1);
+        char cpf[FUNCIONARIO_CPF_SIZE];
+        bzero(cpf, FUNCIONARIO_CPF_SIZE);
+        scanf("%s%*c", cpf);
+        sprintf(funcionario.cpf, FUNCIONARIO_CPF_FORMAT_IN, cpf);
+        
+        printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
+        char password[FUNCIONARIO_PASSWORD_SIZE];
+        bzero(password, FUNCIONARIO_PASSWORD_SIZE);
+        scanf("%s%*c", password);
+        sprintf(funcionario.senha, FUNCIONARIO_PASSWORD_FORMAT_IN, password);
 
 	    authenticated = log_in(&funcionario);
 
@@ -45,9 +55,17 @@ int main(){
 int log_in(Funcionario* funcionario)
 {
     int sock = create_sock_connection();
-    char* serialized_funcionario;
-    sprintf(serialized_funcionario, FUNCIONARIO_FORMAT_IN, funcionario->nome, funcionario->cpf, funcionario->senha);
-    send_message(sock, serialized_funcionario);
+
+    Request request = {};
+
+    bzero(&request, sizeof(Request));
+
+    char message[sizeof(Request)];
+    bzero(message, sizeof(Request));
+
+    sprintf(message, REQUEST_FORMAT, "AUTH", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
+
+    send_message(sock, message);
 
     char buffer = '\0';
     

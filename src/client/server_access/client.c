@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "../../types/funcionario.h"
+#include "../../types/request.h"
 #define PORT 9001
 
 int create_sock_connection()
@@ -94,21 +95,16 @@ void save(char* nome_tabela, Funcionario* funcionario){
     int sock = create_sock_connection();
 
     int table_name_size = strlen(nome_tabela);
-    int message_length = 5 + table_name_size;
+    int message_length = 5 + table_name_size + 1 + sizeof(Funcionario);
     
-    char message[message_length];
-    bzero(message, message_length);
+    Request request = {};
+    char message[sizeof(Request)];
 
-    strcat(message, "POST ");
-    strcat(message, nome_tabela);
+    bzero(&request, sizeof(Request));
+    bzero(&message, sizeof(Request));
 
-    char func_str[sizeof(Funcionario)];
+    sprintf(message, REQUEST_FORMAT, "POST", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
     
-    sprintf(func_str, FUNCIONARIO_FORMAT_IN, funcionario->nome, funcionario->cpf, funcionario->senha);
-
-    strcat(message, " ");
-    strcat(message, func_str);
-
     send_message(sock, message);
 
     char buffer = '0';
