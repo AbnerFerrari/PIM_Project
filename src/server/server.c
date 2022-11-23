@@ -15,7 +15,6 @@ void init_server(int* server_fd, struct sockaddr_in* address, int addrlen);
 void* read_message(void* arg);
 
 pthread_mutex_t mutex_thread_counter = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_funcionarios_file = PTHREAD_MUTEX_INITIALIZER;
 int thread_count = 0, empty_slot_index = 0;
 pthread_t threads[NUM_THREADS] = {};
 
@@ -61,9 +60,16 @@ void main(int argc, char const* argv[]){
         
         strncpy(infos.body, buffer + 28, 201);
 
-        //memcpy(infos.full_request, buffer, 240);
         infos.sock = new_socket;
         infos.running_thread_index = empty_slot_index;
+
+
+        // fazer isso com todas as propriedades
+        int file_name_size = strlen(strtok(infos.table, " "));
+        char file_name[file_name_size];
+        strcpy(file_name, strtok(infos.table, " "));
+        bzero(infos.table, sizeof(infos.table));
+        strcpy(infos.table, file_name);
 
         pthread_create(&threads[empty_slot_index], NULL, read_message, (void*)&infos);
     }
@@ -83,8 +89,7 @@ void* read_message(void* arg)
 
     if (strncmp(infos.action, "LIST", 4) == 0)
     {
-        
-        long file_size = get_file_size(infos.table, &mutex_funcionarios_file);
+        long file_size = get_file_size(infos.table);
         
         long size_with_format;
         int chunk_size;
@@ -92,9 +97,9 @@ void* read_message(void* arg)
         
         if (strcmp(infos.table, "funcionarios") == 0)
         {
-            size_with_format = (file_size / sizeof(Funcionario)) * 21 + file_size;
+            quantity_metadata_chars = 23;
+            size_with_format = (file_size / sizeof(Funcionario)) * quantity_metadata_chars + file_size;
             chunk_size = sizeof(Funcionario);
-            quantity_metadata_chars = 21;
         }
         else
         {
@@ -103,9 +108,9 @@ void* read_message(void* arg)
         
         
         char list_buffer[size_with_format];
-        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars, &mutex_funcionarios_file);
+        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars);
         
-        send(infos.sock, list_buffer, file_size, 0);
+        send(infos.sock, list_buffer, size_with_format, 0);
         // lê a tabela que a ação deve ser executada
         // lê o arquivo inteiro
     }
@@ -116,7 +121,7 @@ void* read_message(void* arg)
     }
     else if (strncmp(infos.action, "POST", 4) == 0)
     {
-        database_write(strtok(infos.table, " "), infos.body, &mutex_funcionarios_file);
+        database_write(infos.table, &infos.body[0]);
     }
     else if (infos.action== "UPDATE")
     {
@@ -126,15 +131,17 @@ void* read_message(void* arg)
         // atribui o novo objeto ao antigo
         // salvar o objeto
     }
-    else if (infos.action == "DELETE"){
+    else if (strncmp(infos.action, "DELETE", 6) == 0 ){
         // lê a tabela que a ação deve ser executada
         // escaneia o objeto do buffer
         // recupera o objeto da base de dados
         // se existir, exclui
+
+        database_delete(infos.table, &infos.body);
     }
     else // rotina de login. Isolar esse código
     {
-        int exists = user_exists(infos.body, &mutex_funcionarios_file);
+        int exists = user_exists(infos.body);
         
         if (exists)
         {

@@ -86,18 +86,12 @@ void cadastro_funcionario(int sock){
 
                 break;
             case 4:
-                // printf("Informe o nome do funcionário a ser ecluido: ");
+                printf("Informe o CPF do funcionário a ser exluido: ");
                 
-                // Funcionario funcionario;
-                // scanf("%s", funcionario.name);
+                Funcionario funcionario = {};
+                scanf("%s", funcionario.cpf);
 
-                // funcionario = database_get("funcionarios", "name", funcionario.name);
-
-                // if (funcionario == NULL)
-                //     printf("Funcionário não encontrado.");
-                // else
-                //     database_delete("funcionarios", &funcionario);
-
+                delete("funcionarios", funcionario.cpf);
                 break;
             case 5:
                 option = 0;

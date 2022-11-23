@@ -48,15 +48,10 @@ void list(char* nome_tabela){
     // cria conexão com servidor
     int sock = create_sock_connection();
 
-    int table_name_size = strlen(nome_tabela);
-    int message_length = 5 + table_name_size;
+    char message[sizeof(Request)];
+    bzero(message, sizeof(Request));
     
-    char message[message_length];
-    bzero(message, message_length);
-
-    strcat(message, "LIST ");
-    strcat(message, nome_tabela);
-
+    sprintf(message, REQUEST_FORMAT, "LIST", "funcionarios", "");
     send_message(sock, message);
 
     int length;
@@ -118,6 +113,27 @@ void save(char* nome_tabela, Funcionario* funcionario){
 //     return 1;
 // }
 
-// int database_delete(char[20] nome_tabela, Funcionario* funcionario){
-//     return 1;
-// }
+int delete(char* table_name, char* key){
+    int sock = create_sock_connection();
+
+    int table_name_size = strlen(table_name);
+    int message_length = 5 + table_name_size + 1 + sizeof(Funcionario);
+    
+    Request request = {};
+    char message[sizeof(Request)];
+
+    bzero(&request, sizeof(Request));
+    bzero(&message, sizeof(Request));
+
+    sprintf(message, REQUEST_FORMAT, "DELETE", "funcionarios", key);
+    
+    send_message(sock, message);
+
+    char buffer = '0';
+
+    while(read_answer(sock, &buffer, 1) > 0);
+
+    close_sock_connection(sock);   
+    
+    if (buffer == '0') perror("erro ao excluir");
+}
