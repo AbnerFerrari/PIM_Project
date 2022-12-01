@@ -1,1 +1,1 @@
-void get_file_name_with_extension(char* table_name, int table_name_length, char* buffer);
+void get_file_name_with_extension(char* table_name, char** buffer);

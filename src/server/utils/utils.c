@@ -4,11 +4,11 @@
 #include <pthread.h>
 #include "../headers/constants.h"
 
-void get_file_name_with_extension(char* table_name, int table_name_length, char* buffer);
-
-void get_file_name_with_extension(char* table_name, int table_name_length, char* buffer) {
-    bzero(buffer, FILE_EXTENSION_SIZE);
-
-    strcat(buffer, table_name);
-    strcat(buffer, FILE_EXTENSION);
+void get_file_name_with_extension(char* table_name, char** buffer) {
+    int table_name_length = strlen(table_name);
+    int file_name_length = table_name_length + FILE_EXTENSION_SIZE + 1;
+    *buffer = malloc(file_name_length); // The + 1 here is from null character
+    bzero(*buffer, file_name_length);
+    strcat(*buffer, table_name);
+    strcat(*buffer, FILE_EXTENSION);
 }

@@ -98,8 +98,7 @@ void save(char* nome_tabela, Funcionario* funcionario){
     bzero(&request, sizeof(Request));
     bzero(&message, sizeof(Request));
 
-    sprintf(message, REQUEST_FORMAT, "POST", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
-    
+    sprintf(message, "%s %s %s %s %s", "POST", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
     send_message(sock, message);
 
     char buffer = '0';

@@ -22,24 +22,15 @@ int main(){
     
     while(authenticated == 0){
         clear_screen();
-	
+        
         printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
-        char name[FUNCIONARIO_NAME_SIZE];
-        bzero(name, FUNCIONARIO_NAME_SIZE);
-        scanf("%[^\n]%*c", name);
-        sprintf(funcionario.nome, FUNCIONARIO_NAME_FORMAT_IN, name);
+        scanf("%s", funcionario.nome);
         
         printf("CPF (%d caracteres): ", FUNCIONARIO_CPF_SIZE - 1);
-        char cpf[FUNCIONARIO_CPF_SIZE];
-        bzero(cpf, FUNCIONARIO_CPF_SIZE);
-        scanf("%s%*c", cpf);
-        sprintf(funcionario.cpf, FUNCIONARIO_CPF_FORMAT_IN, cpf);
+        scanf("%s", funcionario.cpf);
         
         printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
-        char password[FUNCIONARIO_PASSWORD_SIZE];
-        bzero(password, FUNCIONARIO_PASSWORD_SIZE);
-        scanf("%s%*c", password);
-        sprintf(funcionario.senha, FUNCIONARIO_PASSWORD_FORMAT_IN, password);
+        scanf("%s", funcionario.senha);
 
 	    authenticated = log_in(&funcionario);
 
@@ -63,7 +54,7 @@ int log_in(Funcionario* funcionario)
     char message[sizeof(Request)];
     bzero(message, sizeof(Request));
 
-    sprintf(message, REQUEST_FORMAT, "AUTH", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
+    sprintf(message, "%s %s %s %s %s", "AUTH", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
 
     send_message(sock, message);
 

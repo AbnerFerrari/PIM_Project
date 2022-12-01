@@ -54,11 +54,8 @@ void main(int argc, char const* argv[]){
         bzero(buffer, sizeof(Request));
         bzero(&infos, sizeof(infos));
         read(new_socket, buffer, 240);
-        
-        strncpy(infos.action, buffer, 6);
-        strncpy(infos.table, buffer + 7, 21);
-        
-        strncpy(infos.body, buffer + 28, 201);
+
+        sscanf(buffer, "%s %s %[^\n]s", infos.action, infos.table, infos.body);
 
         infos.sock = new_socket;
         infos.running_thread_index = empty_slot_index;
@@ -137,7 +134,7 @@ void* read_message(void* arg)
         // recupera o objeto da base de dados
         // se existir, exclui
 
-        database_delete(infos.table, &infos.body);
+        database_delete(infos.table, 1);
     }
     else // rotina de login. Isolar esse código
     {
