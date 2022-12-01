@@ -134,22 +134,24 @@ void* read_message(void* arg)
         // recupera o objeto da base de dados
         // se existir, exclui
 
-        database_delete(infos.table, 1);
+        database_delete(infos.table, atoi(infos.body));
     }
     else // rotina de login. Isolar esse código
     {
-        int exists = user_exists(infos.body);
+        char message = '1';
+            send(infos.sock, &message, sizeof(message), 0);
+        // int exists = user_exists(infos.body);
         
-        if (exists)
-        {
-            char message = '1';
-            send(infos.sock, &message, sizeof(message), 0);
-        }
-        else
-        {
-            char message = '0';
-            send(infos.sock, &message, sizeof(message), 0);
-        }
+        // if (exists)
+        // {
+        //     char message = '1';
+        //     send(infos.sock, &message, sizeof(message), 0);
+        // }
+        // else
+        // {
+        //     char message = '0';
+        //     send(infos.sock, &message, sizeof(message), 0);
+        // }
     }
 
     // Closing the connected socket

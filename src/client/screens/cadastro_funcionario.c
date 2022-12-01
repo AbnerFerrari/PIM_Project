@@ -4,21 +4,15 @@
 #include "../headers/client.h"
 #include "../../types/funcionario.h"
 
-void list(char* nome_tabela);
-void save(char* nome_tabela, Funcionario* funcionario);
-// Funcionario database_get(char[20] nome_tabela, char[20] nome_campo, char[150] valor_campo);
-// int database_update(char[20] nome_tabela, Funcionario* funcionario);
-// int database_delete(char[20] nome_tabela, Funcionario* funcionario);
-
 void cadastro_funcionario(int sock){
     int option;
     
     do
     {
-        clear_screen();
+        system("clear");
         printf("1 - Listar\n2 - Cadastrar novo funcionário\n3 - Editar funcionário\n4 - Excluir funcionário\n5 - Voltar à tela anterior\nEscolha uma opção: ");
         scanf("%d%*c", &option);
-        clear_screen();
+        system("clear");
         switch (option)
         {
             case 1: // listar funcionários
@@ -40,7 +34,10 @@ void cadastro_funcionario(int sock){
                 printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
                 scanf("%s", func.senha);
 
-                save("funcionarios", &func);
+                char* entity = malloc(strlen(func.nome) + strlen(func.cpf) + strlen(func.senha));
+                sprintf(entity, "%s %s %s", func.nome, func.cpf, func.senha);
+                save("funcionarios", entity);
+                free(entity);
 
                 break;
             case 3:
@@ -77,12 +74,14 @@ void cadastro_funcionario(int sock){
 
                 break;
             case 4:
-                printf("Informe o CPF do funcionário a ser exluido: ");
-                
-                Funcionario funcionario = {};
-                scanf("%s", funcionario.cpf);
+                int id = 0;
+                while (id <= 0)
+                {
+                    printf("Informe o Id do funcionário a ser exluido: "); /* code */
+                    scanf("%d", &id);
+                }
 
-                //delete("funcionarios", funcionario.cpf);
+                delete("funcionarios", id);
                 break;
             case 5:
                 option = 0;

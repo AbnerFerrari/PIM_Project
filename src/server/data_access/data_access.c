@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 union data_access
 {
@@ -76,24 +77,29 @@ int database_write(char* table_name, char* buffer)
 
 void database_delete(char* table_name, int id)
 {
+    pthread_mutex_lock(&mutex_funcionarios_file);
     FILE *file, *temp;
     union data_access obj;
     int i, j, chunk_size, found=0;
 
     char* file_name;
     get_file_name_with_extension(table_name, &file_name);
+    
+    char timestamp[11];
+    sprintf(timestamp, "%d", time(NULL));
+    char* temp_file_name = malloc(strlen(table_name) + strlen(FILE_EXTENSION) + strlen(timestamp));
+    sprintf(temp_file_name, "%s%s%s", table_name, timestamp, FILE_EXTENSION);
 
     if (strcmp(table_name, "funcionarios") == 0)
     {
-        
         file = fopen(file_name, "r");
-        temp = fopen("funcionarios_temp.txt", "a");
         chunk_size = sizeof(Funcionario);
     }
     else {
         perror("erro ao excluir");
     }
-    
+
+    temp = fopen(temp_file_name, "w");
     while(fread(&obj, chunk_size, 1, file)){
         if(obj.id == id){
             found = 1;
@@ -106,34 +112,68 @@ void database_delete(char* table_name, int id)
 
 
     if(found){
-            file = fopen(file_name, "w");
-            temp = fopen("funcionarios_temp.txt", "r");
+        file = fopen(file_name, "w");
+        temp = fopen(temp_file_name, "r");
 
-            while(fread(&obj, chunk_size, 1, temp)){
-                fwrite(&obj, chunk_size, 1, file);
-            }
-            fclose(file);
-            fclose(temp);
+        while(fread(&obj, chunk_size, 1, temp)){
+            fwrite(&obj, chunk_size, 1, file);
+        }
+        fclose(file);
+        fclose(temp);
+        remove(temp_file_name);
     }
-    else
-        printf("\nNot Found.....\n");
 
+    pthread_mutex_unlock(&mutex_funcionarios_file);
+}
 
-
-    // int length = strlen(table_name) + strlen(FILE_EXTENSION) + 1;
-    // char file_name[length];
-    // get_file_name_with_extension(table_name, length, file_name);
-
-    // // Critical Session
+void database_update(char* table_name, char* buffer){
     // pthread_mutex_lock(&mutex_funcionarios_file);
+    // FILE *file, *temp;
+    // union data_access obj;
+    // int i, j, chunk_size, found=0;
 
-    // FILE* file = fopen(file_name, "a");
-    // Funcionario func = {};
+    // char* file_name;
+    // get_file_name_with_extension(table_name, &file_name);
     
-    // sscanf(buffer, FUNCIONARIO_FORMAT_OUT, func.nome, func.cpf, func.senha);
+    // char timestamp[11];
+    // sprintf(timestamp, "%d", time(NULL));
+    // char* temp_file_name = malloc(strlen(table_name) + strlen(FILE_EXTENSION) + strlen(timestamp));
+    // sprintf(temp_file_name, "%s%s%s", table_name, timestamp, FILE_EXTENSION);
 
-    // fprintf(file, FUNCIONARIO_FORMAT_IN, func.nome, func.cpf, func.senha);
+    // if (strcmp(table_name, "funcionarios") == 0)
+    // {
+    //     file = fopen(file_name, "r");
+    //     chunk_size = sizeof(Funcionario);
+    // }
+    // else {
+    //     perror("erro ao excluir");
+    // }
+
+    // temp = fopen(temp_file_name, "w");
+    // while(fread(&obj, chunk_size, 1, file)){
+    //     if(obj.id == id){
+    //         found = 1;
+    //     }
+    //     else
+    //         fwrite(&obj, chunk_size, 1, temp);
+    // }
     // fclose(file);
+    // fclose(temp);
+
+
+    // if(found){
+    //     file = fopen(file_name, "w");
+    //     temp = fopen(temp_file_name, "r");
+
+    //     while(fread(&obj, chunk_size, 1, temp)){
+    //         fwrite(&obj, chunk_size, 1, file);
+    //     }
+    //     fclose(file);
+    //     fclose(temp);
+    //     remove(temp_file_name);
+    // }
+    // else
+    //     printf("\nNot Found.....\n");
 
     // pthread_mutex_unlock(&mutex_funcionarios_file);
 }

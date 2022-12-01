@@ -82,11 +82,7 @@ void list(char* nome_tabela){
     close_sock_connection(sock);
 }
 
-// Funcionario database_get(char[20] nome_tabela, char[20] nome_campo, char[150] valor_campo){
-//     return funcionario;
-// }
-
-void save(char* nome_tabela, Funcionario* funcionario){
+void save(char* nome_tabela, char* entity){
     int sock = create_sock_connection();
 
     int table_name_size = strlen(nome_tabela);
@@ -98,7 +94,7 @@ void save(char* nome_tabela, Funcionario* funcionario){
     bzero(&request, sizeof(Request));
     bzero(&message, sizeof(Request));
 
-    sprintf(message, "%s %s %s %s %s", "POST", "funcionarios", funcionario->nome, funcionario->cpf, funcionario->senha);
+    sprintf(message, "%s %s %s", "POST", "funcionarios", entity);
     send_message(sock, message);
 
     char buffer = '0';
@@ -108,23 +104,14 @@ void save(char* nome_tabela, Funcionario* funcionario){
     close_sock_connection(sock);
 }
 
-// int database_update(char[20] nome_tabela, Funcionario* funcionario){
-//     return 1;
-// }
-
-int delete(char* table_name, char* key){
+int delete(char* table_name, int id){
     int sock = create_sock_connection();
 
-    int table_name_size = strlen(table_name);
-    int message_length = 5 + table_name_size + 1 + sizeof(Funcionario);
-    
-    Request request = {};
     char message[sizeof(Request)];
 
-    bzero(&request, sizeof(Request));
     bzero(&message, sizeof(Request));
 
-    sprintf(message, REQUEST_FORMAT, "DELETE", "funcionarios", key);
+    sprintf(message, "%s %s %d", "DELETE", "funcionarios", id);
     
     send_message(sock, message);
 
