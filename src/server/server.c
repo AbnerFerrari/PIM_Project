@@ -138,20 +138,18 @@ void* read_message(void* arg)
     }
     else // rotina de login. Isolar esse código
     {
-        char message = '1';
-            send(infos.sock, &message, sizeof(message), 0);
-        // int exists = user_exists(infos.body);
+        int exists = user_exists(infos.body);
         
-        // if (exists)
-        // {
-        //     char message = '1';
-        //     send(infos.sock, &message, sizeof(message), 0);
-        // }
-        // else
-        // {
-        //     char message = '0';
-        //     send(infos.sock, &message, sizeof(message), 0);
-        // }
+        if (exists)
+        {
+            char message = '1';
+            send(infos.sock, &message, sizeof(message), 0);
+        }
+        else
+        {
+            char message = '0';
+            send(infos.sock, &message, sizeof(message), 0);
+        }
     }
 
     // Closing the connected socket
