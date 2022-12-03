@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../headers/client.h"
-#include "../../types/funcionario.h"
+#include "../headers/server_access.h"
+#include "../../types/user.h"
 
-void cadastro_funcionario(int sock){
+void users(int sock){
     int option;
     
     do
@@ -59,7 +59,6 @@ void cadastro_funcionario(int sock){
                 char funcionario[sizeof(Funcionario)];
                 sprintf(funcionario, "%d %s %s %s", func.id, func.nome, func.cpf, func.senha);
                 edit("funcionarios", funcionario);
-                free(entity);
 
                 break;
             case 4:

@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../headers/client.h"
+#include "../headers/server_access.h"
 #include <string.h>
 #include "../headers/menu.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "../../types/funcionario.h"
+#include "../../types/user.h"
 #include "../../types/request.h"
 
 #define BUFFER_SIZE 132

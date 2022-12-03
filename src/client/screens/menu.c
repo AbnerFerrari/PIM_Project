@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../headers/client.h"
-#include "../headers/cadastro_funcionario.h"
+#include "../headers/server_access.h"
+#include "../headers/users.h"
 
 void menu(){
     int option;
@@ -16,7 +16,7 @@ void menu(){
         switch (option)
         {
             case 1: // Tela de cadastro de funcionário/usuário
-                cadastro_funcionario();
+                users();
                 break;
             case 2: // Tela de cadastro de clientes
                 option = 0;

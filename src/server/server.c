@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <pthread.h>
-#include "../types/funcionario.h"
+#include "../types/user.h"
 #include "./headers/data_access.h"
 #include "./headers/utils.h"
 #include "./headers/constants.h"

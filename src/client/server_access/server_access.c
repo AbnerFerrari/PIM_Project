@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "../../types/funcionario.h"
+#include "../../types/user.h"
 #include "../../types/request.h"
 #define PORT 9001
 

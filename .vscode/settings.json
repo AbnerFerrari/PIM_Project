@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "users.h": "c",
+        "request.h": "c",
+        "data_access.h": "c"
+    }
+}

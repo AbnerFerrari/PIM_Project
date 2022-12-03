@@ -1,5 +1,5 @@
 #include "../headers/constants.h"
-#include "../../types/funcionario.h"
+#include "../../types/user.h"
 #include "../headers/utils.h"
 #include <pthread.h>
 #include <stdio.h>
