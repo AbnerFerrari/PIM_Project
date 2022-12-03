@@ -44,6 +44,42 @@ void close_sock_connection(int sock){
     close(sock);
 }
 
+void get(char* table_name, int id){
+    // cria conexão com servidor
+    int sock = create_sock_connection();
+
+    char message[sizeof(Request)];
+    bzero(message, sizeof(Request));
+
+    int length;
+
+    if (strcmp(table_name, "funcionarios") == 0)
+    {
+        length = sizeof(Funcionario);
+    }
+    else
+    {
+        perror("nome da tabela inválido");
+    }
+
+    sprintf(message, "%s %s %d", "GET", table_name, id);
+    send_message(sock, message);
+
+    char buffer[length];
+    bzero(buffer, length);
+
+    while(read_answer(sock, &buffer[0], length) > 0);
+
+    if (strcmp(table_name, "funcionarios") == 0)
+    {
+        Funcionario func = {};
+        sscanf(buffer, "%d %s %s %s", &func.id, func.nome, func.cpf, func.senha);
+        printf(FUNCIONARIO_PRETTY_FORMAT_WITH_ID, func.id, func.nome, func.cpf, func.senha);
+    }
+
+    close_sock_connection(sock);
+}
+
 void list(char* nome_tabela){
     // cria conexão com servidor
     int sock = create_sock_connection();
@@ -102,6 +138,33 @@ void save(char* nome_tabela, char* entity){
     while(read_answer(sock, &buffer, 1) > 0);
 
     close_sock_connection(sock);
+}
+
+void edit(char* nome_tabela, char* entity){
+    int sock = create_sock_connection();
+
+    int table_name_size = strlen(nome_tabela);
+    int message_length = 5 + table_name_size + 1 + sizeof(Funcionario);
+    
+    Request request = {};
+    char message[sizeof(Request)];
+
+    bzero(&request, sizeof(Request));
+    bzero(&message, sizeof(Request));
+
+    sprintf(message, "%s %s %s", "PUT", "funcionarios", entity);
+    send_message(sock, message);
+
+    char buffer = '0';
+
+    while(read_answer(sock, &buffer, 1) > 0);    
+
+    close_sock_connection(sock);
+    
+    if (buffer = '0')
+    {
+        perror("Falha ao editar funcionario");
+    }
 }
 
 int delete(char* table_name, int id){

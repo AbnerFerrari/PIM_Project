@@ -111,29 +111,22 @@ void* read_message(void* arg)
         // lê a tabela que a ação deve ser executada
         // lê o arquivo inteiro
     }
-    else if (infos.action == "GET")
+    else if (strncmp(infos.action, "GET", 3) == 0)
     {
-        // lê a tabela que a ação deve ser executada
-        // lê o campo a ser filtrado e o valor do filtro
+        char* entity;
+        database_get(infos.table, atoi(infos.body), &entity);
+        send(infos.sock, entity, strlen(entity), 0);
     }
     else if (strncmp(infos.action, "POST", 4) == 0)
     {
         database_write(infos.table, &infos.body[0]);
     }
-    else if (infos.action== "UPDATE")
+    else if (strncmp(infos.action, "PUT", 3) == 0)
     {
-        // lê a tabela que a ação deve ser executada
-        // escaneia o objeto do buffer
-        // recupera o objeto
-        // atribui o novo objeto ao antigo
-        // salvar o objeto
+        database_update(infos.table, &infos.body[0]);
     }
-    else if (strncmp(infos.action, "DELETE", 6) == 0 ){
-        // lê a tabela que a ação deve ser executada
-        // escaneia o objeto do buffer
-        // recupera o objeto da base de dados
-        // se existir, exclui
-
+    else if (strncmp(infos.action, "DELETE", 6) == 0 )
+    {
         database_delete(infos.table, atoi(infos.body));
     }
     else // rotina de login. Isolar esse código
