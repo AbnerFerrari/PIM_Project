@@ -2,8 +2,7 @@
 #define FUNCIONARIO_CPF_SIZE 12
 #define FUNCIONARIO_PASSWORD_SIZE 21
 
-#define FUNCIONARIO_PRETTY_FORMAT_WITH_ID "Id: %d\nNome: %s\nCPF: %s\nSenha: %s\n\n\n"
-#define FUNCIONARIO_PRETTY_FORMAT "Nome: %s\nCPF: %s\nSenha: %s\n\n\n"
+#define FUNCIONARIO_PRETTY_FORMAT "Id: %d\nNome: %s\nCPF: %s\nSenha: %s\n\n\n"
 
 typedef struct _Funcionario{
     int id;

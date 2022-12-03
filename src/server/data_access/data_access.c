@@ -34,7 +34,7 @@ void database_read(char* table_name, char* buffer, long buffer_size, int chunk_s
 
     while(fread(&func, chunk_size, 1, file) != 0){
         bzero(local_buffer, chunk_size);
-        sprintf(local_buffer, FUNCIONARIO_PRETTY_FORMAT_WITH_ID, func.id, func.nome, func.cpf, func.senha);
+        sprintf(local_buffer, FUNCIONARIO_PRETTY_FORMAT, func.id, func.nome, func.cpf, func.senha);
         strcat(buffer, local_buffer);
     }
     

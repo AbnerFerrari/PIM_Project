@@ -18,8 +18,8 @@ void cadastro_funcionario(int sock){
 
         switch (option)
         {
-            case 1: // listar funcionários
-                list("funcionarios"); // nome da tabela
+            case 1:
+                list("funcionarios");
                 printf("\nPressione ENTER para retornar");
                 
                 scanf("%*c");
@@ -56,7 +56,6 @@ void cadastro_funcionario(int sock){
                 printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
                 scanf("%s", func.senha);
 
-                //char* entity = malloc(strlen(func.nome) + strlen(func.cpf) + strlen(func.senha));
                 char funcionario[sizeof(Funcionario)];
                 sprintf(funcionario, "%d %s %s %s", func.id, func.nome, func.cpf, func.senha);
                 edit("funcionarios", funcionario);
@@ -66,7 +65,7 @@ void cadastro_funcionario(int sock){
             case 4:
                 while (id <= 0)
                 {
-                    printf("Informe o Id do funcionário a ser exluido: "); /* code */
+                    printf("Informe o Id do funcionário a ser exluido: ");
                     scanf("%d%*c", &id);
                 }
 
@@ -81,7 +80,7 @@ void cadastro_funcionario(int sock){
 
                 system("clear");
                 get("funcionarios", id);
-                printf("Pressione ENTER para retornar!"); /* code */
+                printf("Pressione ENTER para retornar!");
                 scanf("%*c");
                 break;
             case 6:

@@ -74,7 +74,7 @@ void get(char* table_name, int id){
     {
         Funcionario func = {};
         sscanf(buffer, "%d %s %s %s", &func.id, func.nome, func.cpf, func.senha);
-        printf(FUNCIONARIO_PRETTY_FORMAT_WITH_ID, func.id, func.nome, func.cpf, func.senha);
+        printf(FUNCIONARIO_PRETTY_FORMAT, func.id, func.nome, func.cpf, func.senha);
     }
 
     close_sock_connection(sock);
