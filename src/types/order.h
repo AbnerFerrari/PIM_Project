@@ -5,9 +5,9 @@
 
 typedef struct _Order{
     int id;
-    int salesman;
-    char client_name[ORDER_CLIENT_NAME_SIZE];
-    int qtd;
+    int userId;
+    char client[ORDER_CLIENT_NAME_SIZE];
     char product[ORDER_PRODUCT_NAME_SIZE];
+    int quantity;
     float unit_price;
 } Order;

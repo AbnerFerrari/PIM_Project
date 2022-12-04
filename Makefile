@@ -2,8 +2,8 @@ CFLAGS =
 
 all: clean_all client server
 
-client : client.o users.o menu.o login.o
-	gcc -o client.out server_access.o users.o menu.o login.o
+client : client.o users.o orders.o menu.o login.o
+	gcc -o client.out server_access.o users.o orders.o menu.o login.o
 
 server : server.o data_access.o utils.o
 	gcc -o server.out server.o data_access.o utils.o
@@ -29,11 +29,14 @@ login.o :
 users.o :
 	gcc -c $(CFLAGS) ./src/client/screens/users.c
 
+orders.o :
+	gcc -c $(CFLAGS) ./src/client/screens/orders.c	
+
 clean_all :
-	rm -f server_access.o users.o menu.o login.o server.o server.out client.out
+	rm -f server_access.o users.o orders.o menu.o login.o server.o server.out client.out
 
 clean_server :
 	rm -f server.o server.out data_access.o utils.o
 
 clean_client :
-	rm -f server_access.o users.o menu.o login.o client.out
+	rm -f server_access.o users.o orders.o menu.o login.o client.out

@@ -4,13 +4,13 @@
 #include "../headers/server_access.h"
 #include "../../types/user.h"
 
-void users(int sock){
+void users(){
     int option;
     
     do
     {
         system("clear");
-        printf("1 - Listar\n2 - Cadastrar novo funcionário\n3 - Editar funcionário\n4 - Excluir funcionário\n5 - Pesquisar funcionario especifico\n6 - Voltar à tela anterior\nEscolha uma opção: ");
+        printf("1 - Listar\n2 - Cadastrar novo funcionário\n3 - Editar funcionário\n4 - Excluir funcionário\n5 - Pesquisar funcionario específico\n6 - Voltar à tela anterior\nEscolha uma opção: ");
         scanf("%d%*c", &option);
         system("clear");
         
@@ -26,7 +26,7 @@ void users(int sock){
                 
                 break;
             case 2:
-                Funcionario func = {};
+                User func = {};
 
                 printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
                 scanf("%s", func.nome);
@@ -56,7 +56,7 @@ void users(int sock){
                 printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
                 scanf("%s", func.senha);
 
-                char funcionario[sizeof(Funcionario)];
+                char funcionario[sizeof(User)];
                 sprintf(funcionario, "%d %s %s %s", func.id, func.nome, func.cpf, func.senha);
                 edit("funcionarios", funcionario);
 

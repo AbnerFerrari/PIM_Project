@@ -14,10 +14,10 @@
 #define PASSWORD_STR_LENGTH 50
 
 void fill_with_whitespace (char text[], int array_size);
-int log_in(Funcionario* funcionario);
+int log_in(User* funcionario);
 
 int main(){
-	Funcionario funcionario = {};
+	User funcionario = {};
     int authenticated = 0 ;
     
     while(authenticated == 0){
@@ -43,7 +43,7 @@ int main(){
 }
 
 // Retorno: 0 - Não-Autenticado. 1 - Autenticado
-int log_in(Funcionario* funcionario)
+int log_in(User* funcionario)
 {
     int sock = create_sock_connection();
 

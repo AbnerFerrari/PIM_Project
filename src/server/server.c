@@ -95,8 +95,8 @@ void* read_message(void* arg)
         if (strcmp(infos.table, "funcionarios") == 0)
         {
             quantity_metadata_chars = 23;
-            size_with_format = (file_size / sizeof(Funcionario)) * quantity_metadata_chars + file_size;
-            chunk_size = sizeof(Funcionario);
+            size_with_format = (file_size / sizeof(User)) * quantity_metadata_chars + file_size;
+            chunk_size = sizeof(User);
         }
         else
         {

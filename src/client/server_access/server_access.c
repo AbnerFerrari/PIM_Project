@@ -55,7 +55,7 @@ void get(char* table_name, int id){
 
     if (strcmp(table_name, "funcionarios") == 0)
     {
-        length = sizeof(Funcionario);
+        length = sizeof(User);
     }
     else
     {
@@ -72,7 +72,7 @@ void get(char* table_name, int id){
 
     if (strcmp(table_name, "funcionarios") == 0)
     {
-        Funcionario func = {};
+        User func = {};
         sscanf(buffer, "%d %s %s %s", &func.id, func.nome, func.cpf, func.senha);
         printf(FUNCIONARIO_PRETTY_FORMAT, func.id, func.nome, func.cpf, func.senha);
     }
@@ -94,7 +94,7 @@ void list(char* nome_tabela){
 
     if (strcmp(nome_tabela, "funcionarios") == 0)
     {
-        length = sizeof(Funcionario) * 20;
+        length = sizeof(User) * 20;
     }
     else
     {
@@ -122,7 +122,7 @@ void save(char* nome_tabela, char* entity){
     int sock = create_sock_connection();
 
     int table_name_size = strlen(nome_tabela);
-    int message_length = 5 + table_name_size + 1 + sizeof(Funcionario);
+    int message_length = 5 + table_name_size + 1 + sizeof(User);
     
     Request request = {};
     char message[sizeof(Request)];
@@ -130,7 +130,7 @@ void save(char* nome_tabela, char* entity){
     bzero(&request, sizeof(Request));
     bzero(&message, sizeof(Request));
 
-    sprintf(message, "%s %s %s", "POST", "funcionarios", entity);
+    sprintf(message, "%s %s %s", "POST", nome_tabela, entity);
     send_message(sock, message);
 
     char buffer = '0';
@@ -144,7 +144,7 @@ void edit(char* nome_tabela, char* entity){
     int sock = create_sock_connection();
 
     int table_name_size = strlen(nome_tabela);
-    int message_length = 5 + table_name_size + 1 + sizeof(Funcionario);
+    int message_length = 5 + table_name_size + 1 + sizeof(User);
     
     Request request = {};
     char message[sizeof(Request)];
