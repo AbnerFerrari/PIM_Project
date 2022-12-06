@@ -18,63 +18,56 @@ typedef union data_access
 pthread_mutex_t mutex_funcionarios_file = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_pedidos_file = PTHREAD_MUTEX_INITIALIZER;
 
-void database_read(char* table_name, char* buffer, long buffer_size, int chunk_size, int metadata_size){
-    char* file_name;
-    get_file_name_with_extension(table_name, &file_name);
-    char* write_format;
+void read_users(char* buffer){
+    int chunk_size = sizeof(User);
+    pthread_mutex_lock(&mutex_funcionarios_file);
 
-    // Critical Session
+    User current_user = {};
+    char local_buffer[chunk_size];
+
+    FILE* file = fopen("funcionarios.txt", "r");
+
+    while(fread(&current_user, chunk_size, 1, file) != 0){
+        bzero(local_buffer, chunk_size);
+        sprintf(local_buffer, FUNCIONARIO_PRETTY_FORMAT, current_user.id, current_user.nome, current_user.cpf, current_user.senha);
+        strcat(buffer, local_buffer);
+    }
+
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_funcionarios_file);
+}
+
+void read_orders(char* buffer){
+    int chunk_size = sizeof(Order);
+    pthread_mutex_lock(&mutex_pedidos_file);
+
+    Order current_order = {};
+    char local_buffer[chunk_size];
+
+    FILE* file = fopen("pedidos.txt", "r");
+
+    while(fread(&current_order, chunk_size, 1, file) != 0){
+        bzero(local_buffer, chunk_size);
+        sprintf(local_buffer, FUNCIONARIO_PRETTY_FORMAT, current_order.id, current_order.userId, current_order.client,
+                current_order.product, current_order.quantity, current_order.unit_price);
+        strcat(buffer, local_buffer);
+    }
+
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_funcionarios_file);
+}
+
+void database_read(char* table_name, char* buffer, long buffer_size){
     if (strcmp(table_name, "funcionarios") == 0)
     {
-        chunk_size = sizeof(User);
-        char* user_write_format = "%d %s %s %s";
-        write_format = malloc(strlen(user_write_format));
-        strcpy(write_format, user_write_format);
-        pthread_mutex_lock(&mutex_funcionarios_file);
+        read_users(buffer);
     }
     else if (strcmp(table_name, "pedidos") == 0)
     {
-        char order_write_format = "%d %s %s %s";
-        write_format = malloc(strlen(order_write_format));
-        strcpy(write_format, order_write_format);
-        chunk_size = sizeof(Order);
-        pthread_mutex_lock(&mutex_pedidos_file);
+        read_orders(buffer);
     }
-
-    void* data;
-    data = malloc(chunk_size);
-
-    FILE* file = fopen(file_name, "r");
-    
-    fseek(file, 0, SEEK_END); 
-    long size = ftell(file);
-    fseek(file, 0, SEEK_SET); 
-    
-    char local_buffer[chunk_size];
-
-    while(fread(data, chunk_size, 1, file) != 0){
-        
-        bzero(local_buffer, chunk_size);
-        if (strcmp(table_name, "funcionarios") == 0)
-        {
-            User* user = ((User*)data);
-            sprintf(local_buffer, write_format, user->id, user->nome, user->cpf, user->senha);
-        }
-        
-        
-        strcat(buffer, local_buffer);
-    }
-    
-    fclose(file);
-
-    if (strcmp(table_name, "funcionarios") == 0)
-    {
-        pthread_mutex_unlock(&mutex_funcionarios_file);
-    }else if (strcmp(table_name, "pedidos") == 0)
-    {
-        pthread_mutex_unlock(&mutex_pedidos_file);
-    }
-    // End Critical Session
 }
 
 void database_get(char* table_name, int id, char** entity){
