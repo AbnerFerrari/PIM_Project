@@ -43,23 +43,24 @@ void read_orders(char* buffer){
     pthread_mutex_lock(&mutex_pedidos_file);
 
     Order current_order = {};
-    char local_buffer[chunk_size];
+    char local_buffer[chunk_size + 94];
 
     FILE* file = fopen("pedidos.txt", "r");
 
     while(fread(&current_order, chunk_size, 1, file) != 0){
         bzero(local_buffer, chunk_size);
-        sprintf(local_buffer, FUNCIONARIO_PRETTY_FORMAT, current_order.id, current_order.userId, current_order.client,
-                current_order.product, current_order.quantity, current_order.unit_price);
+        sprintf(local_buffer, "Id: %d\nId do vendedor: %d\nCliente: %s\nProduto: %s\nQuantidade: %d\nValor unitario: %.2f\nValor total: %.2f\n\n\n",
+         current_order.id, current_order.userId, current_order.client, current_order.product, current_order.quantity, current_order.unit_price,
+         current_order.quantity * current_order.unit_price);
         strcat(buffer, local_buffer);
     }
 
     fclose(file);
 
-    pthread_mutex_unlock(&mutex_funcionarios_file);
+    pthread_mutex_unlock(&mutex_pedidos_file);
 }
 
-void database_read(char* table_name, char* buffer, long buffer_size){
+void database_read(char* table_name, char* buffer){
     if (strcmp(table_name, "funcionarios") == 0)
     {
         read_users(buffer);
@@ -70,14 +71,10 @@ void database_read(char* table_name, char* buffer, long buffer_size){
     }
 }
 
-void database_get(char* table_name, int id, char** entity){
-    char* file_name;
-    get_file_name_with_extension(table_name, &file_name);
-
-    // Critical Session
+void get_user(int id, char** entity){
     pthread_mutex_lock(&mutex_funcionarios_file);
 
-    FILE* file = fopen(file_name, "r");
+    FILE* file = fopen("funcionarios.txt", "r");
 
     User func = {};
     *entity = malloc(sizeof(User));
@@ -92,70 +89,130 @@ void database_get(char* table_name, int id, char** entity){
     fclose(file);
 
     pthread_mutex_unlock(&mutex_funcionarios_file);
-    // End Critical Session
 }
 
-int database_write(char* table_name, char* buffer)
-{
-    char* file_name;
-    get_file_name_with_extension(table_name, &file_name);
+void get_order(int id, char** entity){
+    pthread_mutex_lock(&mutex_pedidos_file);
 
-    // Critical Session
+    FILE* file = fopen("pedidos.txt", "r");
+
+    Order order = {};
+    *entity = malloc(sizeof(Order));
+    while(fread(&order, sizeof(Order), 1, file) != 0){
+        if (order.id == id)
+        {
+            sprintf(*entity, "%d %d %s; %s; %d %f", order.id, order.userId, order.client, order.product, order.quantity, order.unit_price);
+            break;
+        }
+    }
+    
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_pedidos_file);
+}
+
+void database_get(char* table_name, int id, char** entity){
+    if (strcmp(table_name, "funcionarios") == 0)
+    {
+        get_user(id, entity);
+    }
+    else if (strcmp(table_name, "pedidos") == 0)
+    {
+        get_order(id, entity);
+    }
+}
+
+void encrypt(char* password){
+    for (size_t i = 0; i < strlen(password); i++)
+    {        
+        password[i] = (int)password[i] + 1;
+    }
+}
+
+void write_user(char* buffer){
     pthread_mutex_lock(&mutex_funcionarios_file);
 
     User func = {};
     User last_func = {};
 
     #pragma region GetLastId
-    FILE* file = fopen(file_name, "r");
+    FILE* file = fopen("funcionarios.txt", "r");
     while (fread(&last_func, sizeof(User), 1, file) != 0);
     func.id = last_func.id + 1;
     fclose(file);
     #pragma endregion
 
-    file = fopen(file_name, "a");
+    file = fopen("funcionarios.txt", "a");
+    sscanf(buffer, "%[^\n;]%*c %s %s", func.nome, func.cpf, func.senha);
 
-    sscanf(buffer, "%s %s %s", func.nome, func.cpf, func.senha);
+    encrypt(func.senha);
 
     fwrite(&func, sizeof(User), 1, file);
     fclose(file);
 
     pthread_mutex_unlock(&mutex_funcionarios_file);
-    
-    // End Critical Session
 }
 
-void database_delete(char* table_name, int id)
+void write_order(char* buffer){
+    // Critical Session
+    pthread_mutex_lock(&mutex_pedidos_file);
+
+    Order order = {};
+    Order last_order = {};
+
+    #pragma region GetLastId
+    FILE* file = fopen("pedidos.txt", "r");
+    while (fread(&last_order, sizeof(Order), 1, file) != 0);
+    order.id = last_order.id + 1;
+    fclose(file);
+    #pragma endregion
+
+    file = fopen("pedidos.txt", "a");
+
+    sscanf(buffer, "%d %[^\n;]%*c %[^\n;]%*c %d %f", &order.userId, order.client, order.product, &order.quantity, &order.unit_price);
+
+    fwrite(&order, sizeof(Order), 1, file);
+    fclose(file);
+
+    pthread_mutex_unlock(&mutex_pedidos_file);
+}
+
+int database_write(char* table_name, char* buffer)
 {
+    if (strcmp(table_name, "funcionarios") == 0)
+    {
+        write_user(buffer);
+    }
+    else if (strcmp(table_name, "pedidos") == 0)
+    {
+        write_order(buffer);
+    }
+}
+
+void delete_user(int id){
     pthread_mutex_lock(&mutex_funcionarios_file);
     FILE *file, *temp;
-    union data_access obj;
+    User user = { };
     int i, j, chunk_size, found=0;
 
-    char* file_name;
-    get_file_name_with_extension(table_name, &file_name);
+    char* file_name = "funcionarios.txt";
+    char* table_name = "funcionarios";
     
     char timestamp[11];
     sprintf(timestamp, "%d", time(NULL));
     char* temp_file_name = malloc(strlen(table_name) + strlen(FILE_EXTENSION) + strlen(timestamp));
     sprintf(temp_file_name, "%s%s%s", table_name, timestamp, FILE_EXTENSION);
 
-    if (strcmp(table_name, "funcionarios") == 0)
-    {
-        file = fopen(file_name, "r");
-        chunk_size = sizeof(User);
-    }
-    else {
-        perror("erro ao excluir");
-    }
+    file = fopen(file_name, "r");
+    chunk_size = sizeof(User);
 
     temp = fopen(temp_file_name, "w");
-    while(fread(&obj, chunk_size, 1, file)){
-        if(obj.id == id){
+    while(fread(&user, chunk_size, 1, file)){
+        if(user.id == id){
             found = 1;
         }
         else
-            fwrite(&obj, chunk_size, 1, temp);
+            fwrite(&user, chunk_size, 1, temp);
     }
     fclose(file);
     fclose(temp);
@@ -165,8 +222,8 @@ void database_delete(char* table_name, int id)
         file = fopen(file_name, "w");
         temp = fopen(temp_file_name, "r");
 
-        while(fread(&obj, chunk_size, 1, temp)){
-            fwrite(&obj, chunk_size, 1, file);
+        while(fread(&user, chunk_size, 1, temp)){
+            fwrite(&user, chunk_size, 1, file);
         }
         fclose(file);
         fclose(temp);
@@ -176,41 +233,30 @@ void database_delete(char* table_name, int id)
     pthread_mutex_unlock(&mutex_funcionarios_file);
 }
 
-void database_update(char* table_name, char* buffer){
-    pthread_mutex_lock(&mutex_funcionarios_file);
+void delete_order(int id){
+    pthread_mutex_lock(&mutex_pedidos_file);
     FILE *file, *temp;
-    union data_access obj;
+    Order order = { };
     int i, j, chunk_size, found=0;
 
-    char* file_name;
-    get_file_name_with_extension(table_name, &file_name);
+    char* file_name = "pedidos.txt";
+    char* table_name = "pedidos";
     
     char timestamp[11];
     sprintf(timestamp, "%d", time(NULL));
     char* temp_file_name = malloc(strlen(table_name) + strlen(FILE_EXTENSION) + strlen(timestamp));
     sprintf(temp_file_name, "%s%s%s", table_name, timestamp, FILE_EXTENSION);
 
-
-    User func = {};
-    if (strcmp(table_name, "funcionarios") == 0)
-    {
-        file = fopen(file_name, "r");
-        chunk_size = sizeof(User);
-        
-        sscanf(buffer, "%d %s %s %s", &func.id, func.nome, func.cpf, func.senha);
-    }
-    else {
-        perror("erro ao excluir");
-    }
+    file = fopen(file_name, "r");
+    chunk_size = sizeof(Order);
 
     temp = fopen(temp_file_name, "w");
-    while(fread(&obj, chunk_size, 1, file)){
-        if(obj.id == func.id){
+    while(fread(&order, chunk_size, 1, file)){
+        if(order.id == id){
             found = 1;
-            fwrite(&func, chunk_size, 1, temp);
         }
         else
-            fwrite(&obj, chunk_size, 1, temp);
+            fwrite(&order, chunk_size, 1, temp);
     }
     fclose(file);
     fclose(temp);
@@ -220,8 +266,68 @@ void database_update(char* table_name, char* buffer){
         file = fopen(file_name, "w");
         temp = fopen(temp_file_name, "r");
 
-        while(fread(&obj, chunk_size, 1, temp)){
-            fwrite(&obj, chunk_size, 1, file);
+        while(fread(&order, chunk_size, 1, temp)){
+            fwrite(&order, chunk_size, 1, file);
+        }
+        fclose(file);
+        fclose(temp);
+        remove(temp_file_name);
+    }
+
+    pthread_mutex_unlock(&mutex_pedidos_file);
+}
+
+void database_delete(char* table_name, int id)
+{
+    if (strcmp(table_name, "funcionarios") == 0)
+    {
+        delete_user(id);
+    }
+    else if (strcmp(table_name, "pedidos") == 0)
+    {
+        delete_order(id);
+    }  
+}
+
+void update_user(char* buffer){
+    pthread_mutex_lock(&mutex_funcionarios_file);
+    FILE *file, *temp;
+    User user;
+    int i, j, chunk_size, found=0;
+
+    char* file_name = "funcionarios.txt";
+    char* table_name = "funcionarios";
+    
+    char timestamp[11];
+    sprintf(timestamp, "%d", time(NULL));
+    char* temp_file_name = malloc(strlen(table_name) + strlen(FILE_EXTENSION) + strlen(timestamp));
+    sprintf(temp_file_name, "%s%s%s", table_name, timestamp, FILE_EXTENSION);
+
+    User func = {};
+    
+    file = fopen(file_name, "r");
+    chunk_size = sizeof(User);
+    sscanf(buffer, "%d %[^\n;]%*c %s %s", &func.id, func.nome, func.cpf, func.senha);
+
+    temp = fopen(temp_file_name, "w");
+    while(fread(&user, chunk_size, 1, file)){
+        if(user.id == func.id){
+            found = 1;
+            fwrite(&func, chunk_size, 1, temp);
+        }
+        else
+            fwrite(&user, chunk_size, 1, temp);
+    }
+    fclose(file);
+    fclose(temp);
+
+
+    if(found){
+        file = fopen(file_name, "w");
+        temp = fopen(temp_file_name, "r");
+
+        while(fread(&user, chunk_size, 1, temp)){
+            fwrite(&user, chunk_size, 1, file);
         }
         fclose(file);
         fclose(temp);
@@ -233,6 +339,66 @@ void database_update(char* table_name, char* buffer){
     pthread_mutex_unlock(&mutex_funcionarios_file);
 }
 
+void update_order(char* buffer){
+    pthread_mutex_lock(&mutex_pedidos_file);
+    Order order = {};
+    FILE *file, *temp;
+    int i, j, chunk_size, found=0;
+
+    char* file_name = "pedidos.txt";
+    char* table_name = "pedidos";
+    
+    char timestamp[11];
+    sprintf(timestamp, "%d", time(NULL));
+    char* temp_file_name = malloc(strlen(table_name) + strlen(FILE_EXTENSION) + strlen(timestamp));
+    sprintf(temp_file_name, "%s%s%s", table_name, timestamp, FILE_EXTENSION);
+
+    file = fopen(file_name, "r");
+    chunk_size = sizeof(Order);
+    sscanf(buffer, "%d %d %[^\n;]%*c %[^\n;]%*c %d %f", &order.id, &order.userId, order.client, order.product, &order.quantity, &order.unit_price);
+
+    temp = fopen(temp_file_name, "w");
+    Order temp_order = {};
+    while(fread(&temp_order, chunk_size, 1, file)){
+        if(temp_order.id == order.id){
+            found = 1;
+            fwrite(&order, chunk_size, 1, temp);
+        }
+        else
+            fwrite(&temp_order, chunk_size, 1, temp);
+    }
+    fclose(file);
+    fclose(temp);
+
+
+    if(found){
+        file = fopen(file_name, "w");
+        temp = fopen(temp_file_name, "r");
+
+        while(fread(&temp_order, chunk_size, 1, temp)){
+            fwrite(&temp_order, chunk_size, 1, file);
+        }
+        fclose(file);
+        fclose(temp);
+        remove(temp_file_name);
+    }
+    else
+        printf("\nNot Found.....\n");
+
+    pthread_mutex_unlock(&mutex_pedidos_file);
+}
+
+void database_update(char* table_name, char* buffer){
+    if (strcmp(table_name, "funcionarios") == 0)
+    {
+        update_user(buffer);
+    }
+    else if (strcmp(table_name, "pedidos") == 0)
+    {
+        update_order(buffer);
+    }
+}
+
 int user_exists(char* buffer)
 {
     // Critical Session
@@ -242,14 +408,17 @@ int user_exists(char* buffer)
     int found = 0;
 
     User func = {};
-    
+    User login = {};
+    sscanf(buffer, "%[^\n;]%*c %s %s", &login.nome, login.cpf, login.senha);
+    encrypt(login.senha);
     char serialized_func[sizeof(User)];
     fseek(file, 0, SEEK_SET);
     
     while (fread(&func, sizeof(User), 1, file))
     {
-        sprintf(serialized_func, "%s %s %s", func.nome, func.cpf, func.senha);
-        if (strncmp(serialized_func, buffer, 88) == 0)
+        if (strcmp(func.nome, login.nome) == 0
+            && strcmp(func.cpf, login.cpf) == 0
+            && strcmp(func.senha, login.senha) == 0)
         {
             found = 1;
             break;

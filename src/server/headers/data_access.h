@@ -1,7 +1,7 @@
 #include <pthread.h>
 
 char* database_get(char* table_name, int id, char** entity);
-void database_read(char* table, char* buffer, long buffer_size, int chunk_size, int metadata_size);
+void database_read(char* table, char* buffer);
 int database_write(char* table_name, char* buffer);
 void database_update(char* table_name, char* buffer);
 void database_delete(char* table_name, int id);

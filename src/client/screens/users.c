@@ -29,7 +29,7 @@ void users(){
                 User func = {};
 
                 printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
-                scanf("%s", func.nome);
+                scanf("%[^\n]%*c", func.nome);
                 
                 printf("CPF (%d caracteres): ", FUNCIONARIO_CPF_SIZE - 1);
                 scanf("%s", func.cpf);
@@ -38,7 +38,7 @@ void users(){
                 scanf("%s", func.senha);
 
                 char* entity = malloc(strlen(func.nome) + strlen(func.cpf) + strlen(func.senha));
-                sprintf(entity, "%s %s %s", func.nome, func.cpf, func.senha);
+                sprintf(entity, "%s; %s %s", func.nome, func.cpf, func.senha);
                 save("funcionarios", entity);
                 free(entity);
 
@@ -48,7 +48,7 @@ void users(){
                 scanf("%d%*c", &func.id);
 
                 printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
-                scanf("%s", func.nome);
+                scanf("%[^\n]%*c", func.nome);
                 
                 printf("CPF (%d caracteres): ", FUNCIONARIO_CPF_SIZE - 1);
                 scanf("%s", func.cpf);
@@ -57,7 +57,7 @@ void users(){
                 scanf("%s", func.senha);
 
                 char funcionario[sizeof(User)];
-                sprintf(funcionario, "%d %s %s %s", func.id, func.nome, func.cpf, func.senha);
+                sprintf(funcionario, "%d %s; %s %s", func.id, func.nome, func.cpf, func.senha);
                 edit("funcionarios", funcionario);
 
                 break;

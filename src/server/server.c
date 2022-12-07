@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "../types/user.h"
+#include "../types/order.h"
 #include "./headers/data_access.h"
 #include "./headers/utils.h"
 #include "./headers/constants.h"
@@ -60,8 +61,6 @@ void main(int argc, char const* argv[]){
         infos.sock = new_socket;
         infos.running_thread_index = empty_slot_index;
 
-
-        // fazer isso com todas as propriedades
         int file_name_size = strlen(strtok(infos.table, " "));
         char file_name[file_name_size];
         strcpy(file_name, strtok(infos.table, " "));
@@ -71,7 +70,6 @@ void main(int argc, char const* argv[]){
         pthread_create(&threads[empty_slot_index], NULL, read_message, (void*)&infos);
     }
     
-    // Closing the listening socket
     shutdown(server_fd, SHUT_RDWR);
 
     pthread_exit(NULL);
@@ -98,18 +96,22 @@ void* read_message(void* arg)
             size_with_format = (file_size / sizeof(User)) * quantity_metadata_chars + file_size;
             chunk_size = sizeof(User);
         }
+        else if (strcmp(infos.table, "pedidos") == 0)
+        {
+            quantity_metadata_chars = 94;
+            size_with_format = (file_size / sizeof(Order)) * quantity_metadata_chars + file_size;
+            chunk_size = sizeof(Order);
+        }
         else
         {
             perror("nome da tabela é invalido");
         }
         
-        
         char list_buffer[size_with_format];
-        database_read(infos.table, list_buffer, file_size, chunk_size, quantity_metadata_chars);
+        bzero(list_buffer, size_with_format);
+        database_read(infos.table, list_buffer);
         
         send(infos.sock, list_buffer, size_with_format, 0);
-        // lê a tabela que a ação deve ser executada
-        // lê o arquivo inteiro
     }
     else if (strncmp(infos.action, "GET", 3) == 0)
     {

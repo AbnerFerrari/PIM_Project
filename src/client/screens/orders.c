@@ -15,6 +15,9 @@ void orders(){
         system("clear");
         
         int id = 0;
+        Order order = {};
+        char entity[sizeof(Order)];
+        bzero(entity, sizeof(Order));
 
         switch (option)
         {
@@ -26,16 +29,15 @@ void orders(){
                 
                 break;
             case 2:
-                Order order = {};
 
                 printf("Id do vendedor: ");
                 scanf("%d%*c", &order.userId);
                 
                 printf("Nome do cliente (%d caracteres): ", ORDER_CLIENT_NAME_SIZE - 1);
-                scanf("%s[^\n]", order.client);
+                scanf("%[^\n]%*c", order.client);
                 
                 printf("Nome do produto (%d caracteres): ", ORDER_PRODUCT_NAME_SIZE - 1);
-                scanf("%s[^\n]", order.product);
+                scanf("%[^\n]%*c", order.product);
 
                 printf("Quantidade: ");
                 scanf("%d%*c", &order.quantity);
@@ -43,49 +45,54 @@ void orders(){
                 printf("Valor unitário: ");
                 scanf("%f%*c", &order.unit_price);
 
-                char entity[sizeof(Order)];
-                sprintf(entity, "%d %s %s %d %f", order.userId, order.client, order.product, order.quantity, order.unit_price);
+                sprintf(entity, "%d %s; %s; %d %f", order.userId, order.client, order.product, order.quantity, order.unit_price);
                 save("pedidos", entity);
 
                 break;
             case 3:
-                // printf("Id do funcionário a ser editado: ");
-                // scanf("%d%*c", &func.id);
+                printf("Id do pedido a ser editado: ");
+                scanf("%d%*c", &order.id);
 
-                // printf("Nome (%d caracteres): ", FUNCIONARIO_NAME_SIZE - 1);
-                // scanf("%s", func.nome);
+                printf("Id do vendedor: ");
+                scanf("%d%*c", &order.userId);
                 
-                // printf("CPF (%d caracteres): ", FUNCIONARIO_CPF_SIZE - 1);
-                // scanf("%s", func.cpf);
+                printf("Nome do cliente (%d caracteres): ", ORDER_CLIENT_NAME_SIZE - 1);
+                scanf("%[^\n]%*c", order.client);
                 
-                // printf("Senha (%d caracteres): ", FUNCIONARIO_PASSWORD_SIZE - 1);
-                // scanf("%s", func.senha);
+                printf("Nome do produto (%d caracteres): ", ORDER_PRODUCT_NAME_SIZE - 1);
+                scanf("%[^\n]%*c", order.product);
 
-                // char funcionario[sizeof(User)];
-                // sprintf(funcionario, "%d %s %s %s", func.id, func.nome, func.cpf, func.senha);
-                // edit("funcionarios", funcionario);
+                printf("Quantidade: ");
+                scanf("%d%*c", &order.quantity);
+
+                printf("Valor unitário: ");
+                scanf("%f%*c", &order.unit_price);
+
+                sprintf(entity, "%d %d %s; %s; %d %f", order.id, order.userId, order.client, order.product, order.quantity, order.unit_price);
+
+                edit("pedidos", entity);
 
                 break;
             case 4:
-                // while (id <= 0)
-                // {
-                //     printf("Informe o Id do funcionário a ser exluido: ");
-                //     scanf("%d%*c", &id);
-                // }
+                while (id <= 0)
+                {
+                    printf("Informe o Id do pedido a ser exluido: ");
+                    scanf("%d%*c", &id);
+                }
 
-                // delete("funcionarios", id);
+                delete("pedidos", id);
                 break;
             case 5:
-                // while (id <= 0)
-                // {
-                //     printf("Informe o Id do funcionário a ser visualizado: ");
-                //     scanf("%d%*c", &id);
-                // }
+                while (id <= 0)
+                {
+                    printf("Informe o Id do pedido a ser visualizado: ");
+                    scanf("%d%*c", &id);
+                }
 
-                // system("clear");
-                // get("funcionarios", id);
-                // printf("Pressione ENTER para retornar!");
-                // scanf("%*c");
+                system("clear");
+                get("pedidos", id);
+                printf("Pressione ENTER para retornar!");
+                scanf("%*c");
                 break;
             case 6:
                 option = 0;

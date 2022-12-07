@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "../../types/user.h"
+#include "../../types/order.h"
 #include "../../types/request.h"
 #define PORT 9001
 
@@ -56,6 +57,9 @@ void get(char* table_name, int id){
     if (strcmp(table_name, "funcionarios") == 0)
     {
         length = sizeof(User);
+    } else if (strcmp(table_name, "pedidos") == 0)
+    {
+        length = sizeof(Order);
     }
     else
     {
@@ -75,6 +79,13 @@ void get(char* table_name, int id){
         User func = {};
         sscanf(buffer, "%d %s %s %s", &func.id, func.nome, func.cpf, func.senha);
         printf(FUNCIONARIO_PRETTY_FORMAT, func.id, func.nome, func.cpf, func.senha);
+    } else if (strcmp(table_name, "pedidos") == 0)
+    {
+        Order order = {};
+        sscanf(buffer, "%d %d %[^\n;]%*c %[^\n;]%*c %d %f", &order.id, &order.userId, order.client, order.product, &order.quantity, &order.unit_price);
+        printf("Id: %d\nId do vendedor: %d\nCliente: %s\nProduto: %s\nQuantidade: %d\nValor unitario: %.2f\nValor total: %.2f\n\n\n",
+         order.id, order.userId, order.client, order.product, order.quantity, order.unit_price,
+         order.quantity * order.unit_price);
     }
 
     close_sock_connection(sock);
@@ -87,7 +98,7 @@ void list(char* nome_tabela){
     char message[sizeof(Request)];
     bzero(message, sizeof(Request));
     
-    sprintf(message, REQUEST_FORMAT, "LIST", "funcionarios", "");
+    sprintf(message, REQUEST_FORMAT, "LIST", nome_tabela, "");
     send_message(sock, message);
 
     int length;
@@ -95,6 +106,10 @@ void list(char* nome_tabela){
     if (strcmp(nome_tabela, "funcionarios") == 0)
     {
         length = sizeof(User) * 20;
+    }
+    else if (strcmp(nome_tabela, "pedidos") == 0)
+    {
+        length = sizeof(Order) * 20;
     }
     else
     {
@@ -107,13 +122,6 @@ void list(char* nome_tabela){
     while(read_answer(sock, &buffer[0], length) > 0);
 
     printf("%s", buffer);
-    
-    //Funcionario funcionarios[1] = sscanf("");
-    // consulta a tabela e armazena os dados
-    //verifica quantos registros foram buscados através de um loop contando quantos blocos de caracteres foram lidos
-    //aloca espaço em memória de acordo com a quantidade de registros contabilizados (qtd * sizeof(Funcionario))
-    //lê os registros e armazena-os no array de funcionario
-    //retorna o array de funcionario
 
     close_sock_connection(sock);
 }
@@ -143,16 +151,11 @@ void save(char* nome_tabela, char* entity){
 void edit(char* nome_tabela, char* entity){
     int sock = create_sock_connection();
 
-    int table_name_size = strlen(nome_tabela);
-    int message_length = 5 + table_name_size + 1 + sizeof(User);
-    
     Request request = {};
     char message[sizeof(Request)];
-
-    bzero(&request, sizeof(Request));
     bzero(&message, sizeof(Request));
 
-    sprintf(message, "%s %s %s", "PUT", "funcionarios", entity);
+    sprintf(message, "%s %s %s", "PUT", nome_tabela, entity);
     send_message(sock, message);
 
     char buffer = '0';
@@ -174,7 +177,7 @@ int delete(char* table_name, int id){
 
     bzero(&message, sizeof(Request));
 
-    sprintf(message, "%s %s %d", "DELETE", "funcionarios", id);
+    sprintf(message, "%s %s %d", "DELETE", table_name, id);
     
     send_message(sock, message);
 
