@@ -78,7 +78,7 @@ void get(char* table_name, int id){
     if (strcmp(table_name, "funcionarios") == 0)
     {
         User func = {};
-        sscanf(buffer, "%d %s %s %s", &func.id, func.nome, func.cpf, func.senha);
+        sscanf(buffer, "%d %[^\n;]%*c %s %s", &func.id, func.nome, func.cpf, func.senha);
         printf(FUNCIONARIO_PRETTY_FORMAT, func.id, func.nome, func.cpf, func.senha);
     } else if (strcmp(table_name, "pedidos") == 0)
     {

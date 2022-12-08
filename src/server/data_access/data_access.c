@@ -190,10 +190,8 @@ void get_report_data(char* report_name, char** buffer){
             bzero(local_buffer, sizeof(OrderByUser) + 60);
             sprintf(local_buffer, ORDER_BY_USER_PRETTY_FORMAT, order_by_user[j].user, order_by_user[j].quantity_orders, order_by_user[j].total_orders_price);
             strcat(*buffer, local_buffer);
-        }
-        
+        }   
     }
-    
 }
 
 void encrypt(char* password){
