@@ -3,6 +3,7 @@
 #include "../headers/server_access.h"
 #include "../headers/users.h"
 #include "../headers/orders.h"
+#include "../headers/reports.h"
 
 void menu(){
     int option;
@@ -11,7 +12,7 @@ void menu(){
     {
         clear_screen();
         
-        printf("1 - Funcionários\n2 - Pedidos\n3 - Sair\nEscolha uma opção: ");
+        printf("1 - Funcionários\n2 - Pedidos\n3 - Relatorios\n4 - Sair\nEscolha uma opção: ");
         scanf("%d%*c", &option);
 
         switch (option)
@@ -23,11 +24,10 @@ void menu(){
                 orders(); 
                 break;
             case 3: // Tela de cadastro de perfil
+                reports();
+                break;
+            case 4:
                 option = 0;
-                break;
-            case 4: // Tela de cadastro de vendas
-                break;
-            case 5: // Tela relatório
                 break;
             default:
                 break;

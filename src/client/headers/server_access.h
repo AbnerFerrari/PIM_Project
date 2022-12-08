@@ -12,4 +12,5 @@ int delete(char* table_name, int id);
 void save(char* nome_tabela, char* entity);
 void list(char* nome_tabela);
 void get(char* table_name, int id);
+void get_report(char* report_name, char* buffer);
 void edit(char* nome_tabela, char* entity);

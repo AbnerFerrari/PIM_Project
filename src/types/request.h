@@ -4,7 +4,7 @@
 #define REQUEST_BODY_FORMAT_IN "%-200s\0]"
 
 typedef struct request {
-    char action[7];
+    char action[11];
     char table[21];
     char body[201];
     int running_thread_index;

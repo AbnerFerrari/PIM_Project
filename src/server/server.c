@@ -113,6 +113,12 @@ void* read_message(void* arg)
         
         send(infos.sock, list_buffer, size_with_format, 0);
     }
+    else if (strncmp(infos.action, "GET_REPORT", 10) == 0)
+    {
+        char* report_data;
+        get_report_data(infos.table, &report_data);
+        send(infos.sock, report_data, strlen(report_data), 0);
+    }
     else if (strncmp(infos.action, "GET", 3) == 0)
     {
         char* entity;

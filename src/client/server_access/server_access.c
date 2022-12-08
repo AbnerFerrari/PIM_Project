@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "../../types/user.h"
 #include "../../types/order.h"
+#include "../../types/order_by_user.h"
 #include "../../types/request.h"
 #define PORT 9001
 
@@ -86,6 +87,41 @@ void get(char* table_name, int id){
         printf("Id: %d\nId do vendedor: %d\nCliente: %s\nProduto: %s\nQuantidade: %d\nValor unitario: %.2f\nValor total: %.2f\n\n\n",
          order.id, order.userId, order.client, order.product, order.quantity, order.unit_price,
          order.quantity * order.unit_price);
+    }
+
+    close_sock_connection(sock);
+}
+
+void get_report(char* report_name){
+    // cria conexão com servidor
+    int sock = create_sock_connection();
+
+    int length;
+
+    if (strcmp(report_name, "report_orders_by_user") == 0)
+    {
+        length = sizeof(OrderByUser) * 30;
+    }
+
+    char buffer[length];
+    bzero(buffer, length);
+
+    char message[sizeof(Request)];
+    bzero(message, sizeof(Request));
+
+    sprintf(message, "%s %s", "GET_REPORT", report_name);
+    send_message(sock, message);
+    
+    while(read_answer(sock, &buffer[0], length) > 0);
+
+    if (strcmp(report_name, "report_orders_by_user") == 0)
+    {
+        // OrderByUser order_by_user = {};
+        // sscanf(buffer, "%s %d %d %f", order_by_user.user, &order_by_user.quantity_orders, &order_by_user.total_clients_attended, &order_by_user.total_orders_price);
+        // printf(ORDER_BY_USER_PRETTY_FORMAT, order_by_user.user, order_by_user.quantity_orders, order_by_user.total_clients_attended, order_by_user.total_orders_price);
+        FILE* file = fopen("pedidos_por_vendedor.txt", "w");
+        fprintf(file, "%s", buffer);
+        fclose(file);
     }
 
     close_sock_connection(sock);

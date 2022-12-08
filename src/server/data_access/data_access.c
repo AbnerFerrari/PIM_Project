@@ -1,6 +1,7 @@
 #include "../headers/constants.h"
 #include "../../types/user.h"
 #include "../../types/order.h"
+#include "../../types/order_by_user.h"
 #include "../headers/utils.h"
 #include <pthread.h>
 #include <stdio.h>
@@ -81,7 +82,7 @@ void get_user(int id, char** entity){
     while(fread(&func, sizeof(User), 1, file) != 0){
         if (func.id == id)
         {
-            sprintf(*entity, "%d %s %s %s", func.id, func.nome, func.cpf, func.senha);
+            sprintf(*entity, "%d %s; %s %s", func.id, func.nome, func.cpf, func.senha);
             break;
         }
     }
@@ -120,6 +121,79 @@ void database_get(char* table_name, int id, char** entity){
     {
         get_order(id, entity);
     }
+}
+
+int get_order_by_user_index(OrderByUser* order_by_user, int user_id){
+    char* entity;
+    User user = {};
+    database_get("funcionarios", user_id, &entity);
+    sscanf(entity, "%d %[^\n;]%*c %s %s", &user.id, user.nome, user.cpf, user.senha);
+    
+    for (size_t i = 0; i < 20; i++)
+    {
+        if (strcmp(order_by_user[i].user, user.nome) == 0)
+            return i;
+    }
+
+    return -1;
+}
+
+void get_report_data(char* report_name, char** buffer){
+    if (strcmp(report_name, "report_orders_by_user") == 0)
+    {
+        pthread_mutex_lock(&mutex_pedidos_file);
+
+        FILE* pedidos_file = fopen("pedidos.txt", "r");
+        
+        *buffer = malloc(sizeof(OrderByUser) * 30);
+        bzero(*buffer, sizeof(OrderByUser) * 30);
+        Order order = { };
+        User user = { };
+        OrderByUser order_by_user[20];
+        int i = 0;
+        while (fread(&order, sizeof(Order), 1, pedidos_file) != 0)
+        {
+            // se existir, retorna o index de order_by_user, caso contrario retorna -1
+            int index = get_order_by_user_index(order_by_user, order.userId);
+            if (index < 0)
+            {
+                order_by_user[i].quantity_orders = 1;
+                order_by_user[i].total_orders_price = order.unit_price * order.quantity;
+
+                pthread_mutex_lock(&mutex_funcionarios_file);
+                FILE* funcionarios_file = fopen("funcionarios.txt", "r");
+
+                while (fread(&user, sizeof(User), 1, funcionarios_file) != 0)
+                {
+                    if (order.userId == user.id)
+                    {
+                        strcpy(order_by_user[i].user, user.nome);
+                        break;
+                    }
+                }
+                fclose(funcionarios_file);
+                pthread_mutex_unlock(&mutex_funcionarios_file);
+
+                i++;
+            } else {
+                order_by_user[index].quantity_orders++;
+                order_by_user[index].total_orders_price += order.unit_price * order.quantity;
+            }
+        }
+        
+        fclose(pedidos_file);
+        pthread_mutex_unlock(&mutex_pedidos_file);
+
+        char local_buffer[sizeof(OrderByUser) + 60];
+        for (size_t j = 0; j < i; j++)
+        {
+            bzero(local_buffer, sizeof(OrderByUser) + 60);
+            sprintf(local_buffer, ORDER_BY_USER_PRETTY_FORMAT, order_by_user[j].user, order_by_user[j].quantity_orders, order_by_user[j].total_orders_price);
+            strcat(*buffer, local_buffer);
+        }
+        
+    }
+    
 }
 
 void encrypt(char* password){
