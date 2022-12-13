@@ -233,7 +233,11 @@ void write_order(char* buffer){
     Order last_order = {};
 
     #pragma region GetLastId
-    FILE* file = fopen("pedidos.txt", "r");
+
+    FILE* file = fopen("pedidos.txt", "a");
+    fclose(file);
+    file = fopen("pedidos.txt", "r");
+    
     while (fread(&last_order, sizeof(Order), 1, file) != 0);
     order.id = last_order.id + 1;
     fclose(file);
@@ -380,6 +384,8 @@ void update_user(char* buffer){
     file = fopen(file_name, "r");
     chunk_size = sizeof(User);
     sscanf(buffer, "%d %[^\n;]%*c %s %s", &func.id, func.nome, func.cpf, func.senha);
+
+    encrypt(func.senha);
 
     temp = fopen(temp_file_name, "w");
     while(fread(&user, chunk_size, 1, file)){
