@@ -1,0 +1,20 @@
+Vendedor: jeanzao
+Pedidos realizados: 1
+Valor total vendido: 2400.00
+
+
+Vendedor: enzo
+Pedidos realizados: 2
+Valor total vendido: 5300.00
+
+
+Vendedor: jaque
+Pedidos realizados: 1
+Valor total vendido: 150.00
+
+
+Vendedor: daniel
+Pedidos realizados: 1
+Valor total vendido: 3000.00
+
+
